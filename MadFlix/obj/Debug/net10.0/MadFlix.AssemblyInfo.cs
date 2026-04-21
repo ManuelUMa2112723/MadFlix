@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MadFlix")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6e833409428e45c25858b6ec9df8e3bc61026eda")]
 [assembly: System.Reflection.AssemblyProductAttribute("MadFlix")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MadFlix")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
