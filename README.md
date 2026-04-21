@@ -1,4 +1,5 @@
 Caminho A — Projeto Blazor Web App
+
 � LojaApp/
 │
 ├── � Models/
