@@ -18,3 +18,9 @@ Caminho A — Projeto Blazor Web App
 │ └── Produtos.razor ← UI — chama o Service diretamente  
 │  
 └── Program.cs ← regista tudo no Dependency Injection  
+
+
+
+
+
+<img width="1180" height="730" alt="DiagramaDominio" src="https://github.com/user-attachments/assets/c49cadba-2628-4269-9bba-0b9a953ca110" />
