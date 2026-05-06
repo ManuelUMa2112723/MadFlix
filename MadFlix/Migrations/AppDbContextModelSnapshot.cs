@@ -14,7 +14,133 @@ namespace MadFlix.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.6");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.7");
+
+            modelBuilder.Entity("MadFlix.Models.Ator", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("DataNascimento")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Atores");
+                });
+
+            modelBuilder.Entity("MadFlix.Models.Diretor", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("DataNascimento")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Diretores");
+                });
+
+            modelBuilder.Entity("MadFlix.Models.Filme", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Ano")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("DiretorId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Genero")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Sinopse")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Titulo")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DiretorId");
+
+                    b.ToTable("Filmes");
+                });
+
+            modelBuilder.Entity("MadFlix.Models.FilmeAtor", b =>
+                {
+                    b.Property<int>("FilmeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("AtorId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Papel")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("FilmeId", "AtorId");
+
+                    b.HasIndex("AtorId");
+
+                    b.ToTable("FilmeAtores");
+                });
+
+            modelBuilder.Entity("MadFlix.Models.Filme", b =>
+                {
+                    b.HasOne("MadFlix.Models.Diretor", "Diretor")
+                        .WithMany("Filmes")
+                        .HasForeignKey("DiretorId");
+
+                    b.Navigation("Diretor");
+                });
+
+            modelBuilder.Entity("MadFlix.Models.FilmeAtor", b =>
+                {
+                    b.HasOne("MadFlix.Models.Ator", "Ator")
+                        .WithMany("FilmeAtores")
+                        .HasForeignKey("AtorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MadFlix.Models.Filme", "Filme")
+                        .WithMany("FilmeAtores")
+                        .HasForeignKey("FilmeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Ator");
+
+                    b.Navigation("Filme");
+                });
+
+            modelBuilder.Entity("MadFlix.Models.Ator", b =>
+                {
+                    b.Navigation("FilmeAtores");
+                });
+
+            modelBuilder.Entity("MadFlix.Models.Diretor", b =>
+                {
+                    b.Navigation("Filmes");
+                });
+
+            modelBuilder.Entity("MadFlix.Models.Filme", b =>
+                {
+                    b.Navigation("FilmeAtores");
+                });
 #pragma warning restore 612, 618
         }
     }
