@@ -24,3 +24,6 @@ Caminho A — Projeto Blazor Web App
 
 
 <img width="1180" height="730" alt="DiagramaDominio" src="https://github.com/user-attachments/assets/c49cadba-2628-4269-9bba-0b9a953ca110" />
+
+
+<img width="2918" height="1349" alt="ModeloRelacional(BD)" src="https://github.com/user-attachments/assets/640e55f6-4472-416e-ba2a-e030743567fd" />
