@@ -1,7 +1,70 @@
 ﻿@page "/"
+@rendermode InteractiveServer
+@using MadFlix.Models
+@using MadFlix.Services
+@inject FilmeService FilmeService
 
-<PageTitle>Home</PageTitle>
+<PageTitle>MadFlix</PageTitle>
 
-<h1>Hello, world!</h1>
+<h1>MadFlix</h1>
 
-Welcome to your new app.
+<div style="margin-top: 2rem;">
+    <input type="text" 
+           @oninput="e => termoBusca = e.Value?.ToString() ?? string.Empty"
+           placeholder="Pesquisar filme..." 
+           style="padding: 0.5rem; width: 300px; font-size: 1rem;" />
+
+    <button @onclick="Buscar" style="padding: 0.5rem 1rem; margin-left: 0.5rem;">
+        Pesquisar
+    </button>
+</div>
+
+@if (carregando)
+{
+    <p style="margin-top: 1rem;">A pesquisar...</p>
+}
+
+@if (filme != null)
+{
+    <div style="margin-top: 2rem;">
+        <h2>@filme.Titulo (@filme.Ano)</h2>
+        <p><strong>Género:</strong> @filme.Genero</p>
+        <p><strong>Sinopse:</strong> @filme.Sinopse</p>
+        <p><strong>Avaliação IMDb:</strong> @filme.ImdbRating</p>
+        <p><strong>Duração:</strong> @filme.Runtime</p>
+        <p><strong>Classificação:</strong> @filme.Rated</p>
+        @if (!string.IsNullOrEmpty(filme.Poster))
+        {
+            <img src="@filme.Poster" alt="@filme.Titulo" style="margin-top: 1rem; width: 200px;" />
+        }
+    </div>
+}
+
+@if (erro != null)
+{
+    <p style="color: red; margin-top: 1rem;">@erro</p>
+}
+
+@code {
+    private string termoBusca = string.Empty;
+    private Filme? filme;
+    private bool carregando = false;
+    private string? erro;
+
+    private async Task Buscar()
+    {
+        if (string.IsNullOrWhiteSpace(termoBusca))
+            return;
+
+        carregando = true;
+        erro = null;
+        filme = null;
+
+        filme = await FilmeService.BuscarFilmeAsync(termoBusca);
+
+        if (filme == null)
+            erro = $"Filme '{termoBusca}' não encontrado.";
+
+        carregando = false;
+    }
+}

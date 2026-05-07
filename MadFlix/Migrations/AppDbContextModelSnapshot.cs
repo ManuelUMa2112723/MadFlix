@@ -67,6 +67,21 @@ namespace MadFlix.Migrations
                     b.Property<string>("Genero")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("ImdbId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ImdbRating")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Poster")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Rated")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Runtime")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Sinopse")
                         .HasColumnType("TEXT");
 

@@ -1,6 +1,7 @@
 using MadFlix.Components;
 using Microsoft.EntityFrameworkCore;
 using MadFlix.Data;
+using MadFlix.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +11,9 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<FilmeService>();
 
 var app = builder.Build();
 

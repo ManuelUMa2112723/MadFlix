@@ -8,7 +8,12 @@ public class Filme
     public string? Genero { get; set; }
     public string? Sinopse { get; set; }
 
-    // Relación con Diretor
+    public string? Poster { get; set; }
+    public string? ImdbId { get; set; }
+    public string? ImdbRating { get; set; }
+    public string? Runtime { get; set; }
+    public string? Rated { get; set; }
+
     public int? DiretorId { get; set; }
     public Diretor? Diretor { get; set; }
 
