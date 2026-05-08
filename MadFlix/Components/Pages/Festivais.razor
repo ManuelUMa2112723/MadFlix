@@ -280,28 +280,22 @@
         {
             var compra = ObterCompraFestival(festival);
             var compradoEm = DateTime.Now;
-            Acesso acesso = compra.Tipo switch
+            var pedido = new AcessoPedido
             {
-                TipoAcesso.PasseDiario => AcessoFactory.CriarPasseDiario(
-                    festival.Id,
-                    compra.DiaFestival,
-                    festival.DataInicio,
-                    festival.DataFim,
-                    PrecoPasseDiario,
-                    compradoEm),
-                TipoAcesso.PasseCompleto => AcessoFactory.CriarPasseCompleto(
-                    festival.Id,
-                    festival.DataInicio,
-                    festival.DataFim,
-                    PrecoPasseCompleto,
-                    compradoEm),
-                TipoAcesso.AluguerDigital => AcessoFactory.CriarAluguerDigitalPersonalizado(
-                    festival.Id,
-                    compra.HorasAluguer,
-                    PrecoAluguerDigital,
-                    compradoEm),
-                _ => throw new InvalidOperationException("Tipo de acesso invalido para festival.")
+                Tipo = compra.Tipo,
+                FestivalId = festival.Id,
+                DiaFestival = compra.DiaFestival,
+                InicioFestival = festival.DataInicio,
+                FimFestival = festival.DataFim,
+                HorasAluguer = compra.HorasAluguer,
+                Preco = ObterPreco(compra.Tipo),
+                CompradoEm = compradoEm
             };
+
+            if (compra.Tipo == TipoAcesso.AluguerDigital)
+                pedido.Decorators.Add(TipoAcessoDecorator.DuracaoAluguerDigital);
+
+            var acesso = AcessoFactory.Criar(pedido);
 
             var janela = acesso.ObterJanelaAcesso();
             carrinho.Add(new CarrinhoItem(
@@ -352,6 +346,17 @@
             TipoAcesso.AluguerDigital => "Aluguer digital",
             TipoAcesso.BilheteSessao => "Bilhete de sessao",
             _ => "Acesso"
+        };
+    }
+
+    private static decimal ObterPreco(TipoAcesso tipo)
+    {
+        return tipo switch
+        {
+            TipoAcesso.PasseDiario => PrecoPasseDiario,
+            TipoAcesso.PasseCompleto => PrecoPasseCompleto,
+            TipoAcesso.AluguerDigital => PrecoAluguerDigital,
+            _ => throw new InvalidOperationException("Tipo de acesso invalido para festival.")
         };
     }
 
