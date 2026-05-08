@@ -1,0 +1,170 @@
+@page "/festivais"
+@rendermode InteractiveServer
+@using MadFlix.Models
+@using MadFlix.Services
+@inject FestivalService FestivalService
+
+<PageTitle>Festivais</PageTitle>
+
+<h1>Festivais</h1>
+
+<div class="mb-4">
+    <button class="btn btn-primary me-2" @onclick="MostrarFormulario">
+        Adicionar festival
+    </button>
+</div>
+
+@if (mostrarFormulario)
+{
+    <EditForm Model="form" OnValidSubmit="CriarFestival" class="border rounded p-3 mb-4">
+        <DataAnnotationsValidator />
+
+        <div class="mb-3">
+            <label class="form-label" for="nome">Nome</label>
+            <InputText id="nome" class="form-control" @bind-Value="form.Nome" placeholder="Festival de Terror" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label" for="genero">Género</label>
+            <InputText id="genero" class="form-control" @bind-Value="form.Genero" placeholder="Terror" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label" for="descricao">Descrição</label>
+            <InputTextArea id="descricao" class="form-control" @bind-Value="form.Descricao" />
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label" for="dataInicio">Data de início</label>
+                <InputDate id="dataInicio" class="form-control" @bind-Value="form.DataInicio" />
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label" for="dataFim">Data de fim</label>
+                <InputDate id="dataFim" class="form-control" @bind-Value="form.DataFim" />
+            </div>
+        </div>
+
+        <button class="btn btn-success" type="submit">Guardar</button>
+        <button class="btn btn-link" type="button" @onclick="EsconderFormulario">Cancelar</button>
+
+        <ValidationSummary class="text-danger mt-3" />
+    </EditForm>
+}
+
+@if (!string.IsNullOrWhiteSpace(mensagem))
+{
+    <div class="alert alert-success">@mensagem</div>
+}
+
+@if (!string.IsNullOrWhiteSpace(erro))
+{
+    <div class="alert alert-danger">@erro</div>
+}
+
+@if (carregando)
+{
+    <p>A carregar festivais...</p>
+}
+else if (festivais.Count > 0)
+{
+    <div class="list-group">
+        @foreach (var festival in festivais)
+        {
+            <div class="list-group-item">
+                <h2 class="h5 mb-1">@festival.Nome</h2>
+                <p class="mb-1"><strong>Género:</strong> @festival.Genero</p>
+                <p class="mb-1">
+                    <strong>Datas:</strong>
+                    @festival.DataInicio.ToShortDateString() - @festival.DataFim.ToShortDateString()
+                </p>
+                @if (!string.IsNullOrWhiteSpace(festival.Descricao))
+                {
+                    <p class="mb-0">@festival.Descricao</p>
+                }
+            </div>
+        }
+    </div>
+}
+else if (listaCarregada)
+{
+    <p>Ainda não existem festivais disponíveis.</p>
+}
+
+@code {
+    private readonly FestivalForm form = new();
+    private List<Festival> festivais = new();
+    private bool mostrarFormulario;
+    private bool carregando;
+    private bool listaCarregada;
+    private string? mensagem;
+    private string? erro;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarFestivais();
+    }
+
+    private void MostrarFormulario()
+    {
+        mostrarFormulario = true;
+        mensagem = null;
+        erro = null;
+    }
+
+    private void EsconderFormulario()
+    {
+        mostrarFormulario = false;
+    }
+
+    private async Task CarregarFestivais()
+    {
+        carregando = true;
+        erro = null;
+
+        festivais = await FestivalService.ListarAsync();
+
+        carregando = false;
+        listaCarregada = true;
+    }
+
+    private async Task CriarFestival()
+    {
+        try
+        {
+            await FestivalService.CriarAsync(
+                form.Nome,
+                form.Genero,
+                form.DataInicio,
+                form.DataFim,
+                form.Descricao);
+
+            form.Limpar();
+            mostrarFormulario = false;
+            mensagem = "Festival criado com sucesso.";
+            await CarregarFestivais();
+        }
+        catch (ArgumentException ex)
+        {
+            erro = ex.Message;
+        }
+    }
+
+    private sealed class FestivalForm
+    {
+        public string Nome { get; set; } = string.Empty;
+        public string Genero { get; set; } = string.Empty;
+        public string? Descricao { get; set; }
+        public DateTime DataInicio { get; set; } = DateTime.Today;
+        public DateTime DataFim { get; set; } = DateTime.Today.AddDays(7);
+
+        public void Limpar()
+        {
+            Nome = string.Empty;
+            Genero = string.Empty;
+            Descricao = null;
+            DataInicio = DateTime.Today;
+            DataFim = DateTime.Today.AddDays(7);
+        }
+    }
+}

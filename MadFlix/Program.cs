@@ -1,6 +1,7 @@
 using MadFlix.Components;
 using Microsoft.EntityFrameworkCore;
 using MadFlix.Data;
+using MadFlix.Factories;
 using MadFlix.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +14,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddHttpClient();
+builder.Services.AddScoped<IFestivalFactory, FestivalFactory>();
+builder.Services.AddScoped<FestivalService>();
 builder.Services.AddScoped<FilmeService>();
 
 var app = builder.Build();
