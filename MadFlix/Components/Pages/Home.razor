@@ -1,4 +1,4 @@
-﻿@page "/"
+@page "/"
 @rendermode InteractiveServer
 @using MadFlix.Models
 @using MadFlix.Services
@@ -6,50 +6,235 @@
 
 <PageTitle>MadFlix</PageTitle>
 
-<h1>MadFlix</h1>
+<div class="home-header">
+    <h1>MadFlix</h1>
 
-<div style="margin-top: 2rem;">
-    <input type="text" 
-           @oninput="e => termoBusca = e.Value?.ToString() ?? string.Empty"
-           placeholder="Pesquisar filme..." 
-           style="padding: 0.5rem; width: 300px; font-size: 1rem;" />
+    <div class="search-bar">
+        <input type="text"
+               @oninput="e => termoBusca = e.Value?.ToString() ?? string.Empty"
+               @onkeydown="PesquisarComEnter"
+               placeholder="Pesquisar filme..." />
 
-    <button @onclick="Buscar" style="padding: 0.5rem 1rem; margin-left: 0.5rem;">
-        Pesquisar
-    </button>
+        <button class="btn btn-primary" @onclick="Buscar">
+            Pesquisar
+        </button>
+    </div>
 </div>
 
 @if (carregando)
 {
-    <p style="margin-top: 1rem;">A pesquisar...</p>
-}
-
-@if (filme != null)
-{
-    <div style="margin-top: 2rem;">
-        <h2>@filme.Titulo (@filme.Ano)</h2>
-        <p><strong>Género:</strong> @filme.Genero</p>
-        <p><strong>Sinopse:</strong> @filme.Sinopse</p>
-        <p><strong>Avaliação IMDb:</strong> @filme.ImdbRating</p>
-        <p><strong>Duração:</strong> @filme.Runtime</p>
-        <p><strong>Classificação:</strong> @filme.Rated</p>
-        @if (!string.IsNullOrEmpty(filme.Poster))
-        {
-            <img src="@filme.Poster" alt="@filme.Titulo" style="margin-top: 1rem; width: 200px;" />
-        }
-    </div>
+    <p class="mt-3">A pesquisar...</p>
 }
 
 @if (erro != null)
 {
-    <p style="color: red; margin-top: 1rem;">@erro</p>
+    <div class="alert alert-danger mt-3">@erro</div>
 }
 
+@if (filme != null)
+{
+    <section class="movie-result">
+        @if (!string.IsNullOrEmpty(filme.Poster))
+        {
+            <img src="@filme.Poster" alt="@filme.Titulo" />
+        }
+
+        <div>
+            <h2>@filme.Titulo (@filme.Ano)</h2>
+            <p><strong>Genero:</strong> @filme.Genero</p>
+            <p><strong>Sinopse:</strong> @filme.Sinopse</p>
+            <p><strong>Avaliacao IMDb:</strong> @filme.ImdbRating</p>
+            <p><strong>Duracao:</strong> @filme.Runtime</p>
+            <p><strong>Classificacao:</strong> @filme.Rated</p>
+        </div>
+    </section>
+}
+
+<section class="recommended-section">
+    <h2>Recomendados</h2>
+
+    @if (carregandoRecomendados)
+    {
+        <p>A carregar filmes recomendados...</p>
+    }
+    else if (filmesRecomendados.Count > 0)
+    {
+        <div class="movie-grid">
+            @foreach (var recomendado in filmesRecomendados)
+            {
+                <article class="movie-card">
+                    @if (!string.IsNullOrWhiteSpace(recomendado.Poster) && recomendado.Poster != "N/A")
+                    {
+                        <img src="@recomendado.Poster" alt="@recomendado.Titulo" />
+                    }
+                    else
+                    {
+                        <div class="movie-card-placeholder">@recomendado.Titulo</div>
+                    }
+
+                    <div class="movie-card-body">
+                        <h3>@recomendado.Titulo</h3>
+                        <p>@recomendado.Genero</p>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+    else
+    {
+        <p>Nao foi possivel carregar recomendacoes neste momento.</p>
+    }
+</section>
+
+<style>
+    .home-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .home-header h1 {
+        margin: 0;
+    }
+
+    .search-bar {
+        display: flex;
+        gap: .75rem;
+        width: min(620px, 100%);
+    }
+
+    .search-bar input {
+        flex: 1;
+        padding: .65rem .8rem;
+        border: 1px solid #ced4da;
+        border-radius: .375rem;
+        font-size: 1rem;
+    }
+
+    .movie-result {
+        display: grid;
+        grid-template-columns: 180px 1fr;
+        gap: 1.5rem;
+        align-items: start;
+        border: 1px solid #dee2e6;
+        border-radius: .5rem;
+        padding: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .movie-result img {
+        width: 180px;
+        border-radius: .375rem;
+    }
+
+    .recommended-section h2 {
+        margin-bottom: 1rem;
+    }
+
+    .movie-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+        gap: 1rem;
+    }
+
+    .movie-card {
+        border: 1px solid #dee2e6;
+        border-radius: .5rem;
+        overflow: hidden;
+        background: #fff;
+    }
+
+    .movie-card img,
+    .movie-card-placeholder {
+        width: 100%;
+        aspect-ratio: 2 / 3;
+        object-fit: cover;
+        background: #111827;
+        color: #fff;
+    }
+
+    .movie-card-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        text-align: center;
+        font-weight: 600;
+    }
+
+    .movie-card-body {
+        padding: .75rem;
+    }
+
+    .movie-card-body h3 {
+        font-size: 1rem;
+        margin: 0 0 .35rem;
+    }
+
+    .movie-card-body p {
+        color: #6c757d;
+        font-size: .9rem;
+        margin: 0;
+    }
+
+    @@media (max-width: 768px) {
+        .home-header {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .search-bar {
+            flex-direction: column;
+        }
+
+        .movie-result {
+            grid-template-columns: 1fr;
+        }
+
+        .movie-result img {
+            width: 160px;
+        }
+    }
+</style>
+
 @code {
+    private readonly string[] titulosRecomendados =
+    [
+        "Inception",
+        "Interstellar",
+        "The Godfather",
+        "The Dark Knight",
+        "Pulp Fiction",
+        "Fight Club"
+    ];
+
     private string termoBusca = string.Empty;
     private Filme? filme;
-    private bool carregando = false;
+    private readonly List<Filme> filmesRecomendados = new();
+    private bool carregando;
+    private bool carregandoRecomendados = true;
     private string? erro;
+
+    protected override async Task OnInitializedAsync()
+    {
+        foreach (var titulo in titulosRecomendados)
+        {
+            var recomendado = await FilmeService.BuscarFilmeAsync(titulo);
+
+            if (recomendado != null)
+                filmesRecomendados.Add(recomendado);
+        }
+
+        carregandoRecomendados = false;
+    }
+
+    private async Task PesquisarComEnter(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+            await Buscar();
+    }
 
     private async Task Buscar()
     {
@@ -63,7 +248,7 @@
         filme = await FilmeService.BuscarFilmeAsync(termoBusca);
 
         if (filme == null)
-            erro = $"Filme '{termoBusca}' não encontrado.";
+            erro = $"Filme '{termoBusca}' nao encontrado.";
 
         carregando = false;
     }
