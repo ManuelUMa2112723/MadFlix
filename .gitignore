@@ -9,6 +9,6 @@
 *.db-shm
 *.db-wal
 
-
+*.db
 
 **/appsettings.Development.json
