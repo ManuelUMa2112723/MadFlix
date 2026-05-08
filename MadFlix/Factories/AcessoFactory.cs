@@ -54,13 +54,13 @@ public class AcessoFactory : IAcessoFactory
     }
 
     public AluguerDigital CriarAluguerDigital(
-        int filmeId,
+        int festivalId,
         TimeSpan duracao,
         decimal preco,
         DateTime compradoEm)
     {
         return new AluguerDigital(
-            filmeId,
+            festivalId,
             duracao,
             preco,
             compradoEm);

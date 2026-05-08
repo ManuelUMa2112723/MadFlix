@@ -3,25 +3,25 @@ namespace MadFlix.Models.Acessos;
 public sealed class AluguerDigital : Acesso
 {
     public AluguerDigital(
-        int filmeId,
+        int festivalId,
         TimeSpan duracao,
         decimal preco,
         DateTime compradoEm) : base(preco, compradoEm)
     {
-        if (filmeId <= 0)
-            throw new ArgumentException("O filme do aluguer e obrigatorio.", nameof(filmeId));
+        if (festivalId <= 0)
+            throw new ArgumentException("O festival do aluguer e obrigatorio.", nameof(festivalId));
 
         if (duracao <= TimeSpan.Zero)
             throw new ArgumentException("A duracao do aluguer tem de ser positiva.", nameof(duracao));
 
-        FilmeId = filmeId;
+        FestivalId = festivalId;
         Duracao = duracao;
     }
 
-    public int FilmeId { get; }
+    public int FestivalId { get; }
     public TimeSpan Duracao { get; }
     public override TipoAcesso Tipo => TipoAcesso.AluguerDigital;
-    public override string Descricao => "Aluguer digital valido durante uma janela temporal.";
+    public override string Descricao => "Aluguer digital do festival valido durante uma janela temporal.";
 
     public override JanelaAcesso ObterJanelaAcesso()
     {

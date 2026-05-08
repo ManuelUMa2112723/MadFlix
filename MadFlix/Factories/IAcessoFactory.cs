@@ -28,7 +28,7 @@ public interface IAcessoFactory
         DateTime compradoEm);
 
     AluguerDigital CriarAluguerDigital(
-        int filmeId,
+        int festivalId,
         TimeSpan duracao,
         decimal preco,
         DateTime compradoEm);

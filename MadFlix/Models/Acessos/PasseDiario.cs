@@ -32,7 +32,7 @@ public sealed class PasseDiario : Acesso
     public DateTime InicioFestival { get; }
     public DateTime FimFestival { get; }
     public override TipoAcesso Tipo => TipoAcesso.PasseDiario;
-    public override string Descricao => "Passe valido para todas as sessoes de um dia do festival.";
+    public override string Descricao => "Passe valido para todas as sessoes do festival no dia escolhido.";
 
     public override JanelaAcesso ObterJanelaAcesso()
     {
