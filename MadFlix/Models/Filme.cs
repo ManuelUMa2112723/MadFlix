@@ -17,6 +17,8 @@ public class Filme
     public int? DiretorId { get; set; }
     public Diretor? Diretor { get; set; }
 
-    // Relación N:M con Ator
+    public int? FestivalId { get; set; }
+    public Festival? Festival { get; set; }
+
     public ICollection<FilmeAtor> FilmeAtores { get; set; } = new List<FilmeAtor>();
 }
