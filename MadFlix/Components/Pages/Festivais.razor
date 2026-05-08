@@ -1,8 +1,11 @@
 @page "/festivais"
 @rendermode InteractiveServer
+@using MadFlix.Factories
 @using MadFlix.Models
+@using MadFlix.Models.Acessos
 @using MadFlix.Services
 @inject FestivalService FestivalService
+@inject IAcessoFactory AcessoFactory
 
 <PageTitle>Festivais</PageTitle>
 
@@ -16,6 +19,11 @@
         Ver festivais disponiveis
     </button>
 
+    @if (!string.IsNullOrWhiteSpace(mensagemCarrinho))
+    {
+        <div class="alert alert-success mt-3">@mensagemCarrinho</div>
+    }
+
     @if (mostrarListaUtilizador)
     {
         <div class="mt-4">
@@ -28,17 +36,70 @@
                 <div class="list-group">
                     @foreach (var festival in festivais)
                     {
+                        var compra = ObterCompraFestival(festival);
+
                         <div class="list-group-item">
-                            <h3 class="h5 mb-1">@festival.Nome</h3>
-                            <p class="mb-1"><strong>Genero:</strong> @festival.Genero</p>
-                            <p class="mb-1">
-                                <strong>Datas:</strong>
-                                @festival.DataInicio.ToShortDateString() - @festival.DataFim.ToShortDateString()
-                            </p>
-                            @if (!string.IsNullOrWhiteSpace(festival.Descricao))
-                            {
-                                <p class="mb-0">@festival.Descricao</p>
-                            }
+                            <div class="row g-3 align-items-end">
+                                <div class="col-lg-7">
+                                    <h3 class="h5 mb-1">@festival.Nome</h3>
+                                    <p class="mb-1"><strong>Genero:</strong> @festival.Genero</p>
+                                    <p class="mb-1">
+                                        <strong>Datas:</strong>
+                                        @festival.DataInicio.ToShortDateString() - @festival.DataFim.ToShortDateString()
+                                    </p>
+                                    @if (!string.IsNullOrWhiteSpace(festival.Descricao))
+                                    {
+                                        <p class="mb-0">@festival.Descricao</p>
+                                    }
+                                </div>
+
+                                <div class="col-lg-5">
+                                    <div class="row g-2">
+                                        <div class="col-md-5">
+                                            <label class="form-label" for="@($"tipo-acesso-{festival.Id}")">Tipo de acesso</label>
+                                            <select id="@($"tipo-acesso-{festival.Id}")"
+                                                    class="form-select"
+                                                    value="@compra.Tipo"
+                                                    @onchange="e => AlterarTipoAcesso(festival.Id, e.Value?.ToString())">
+                                                <option value="@TipoAcesso.PasseDiario">Passe diario</option>
+                                                <option value="@TipoAcesso.PasseCompleto">Passe completo</option>
+                                                <option value="@TipoAcesso.AluguerDigital">Aluguer digital</option>
+                                            </select>
+                                        </div>
+
+                                        @if (compra.Tipo == TipoAcesso.PasseDiario)
+                                        {
+                                            <div class="col-md-4">
+                                                <label class="form-label" for="@($"dia-acesso-{festival.Id}")">Dia</label>
+                                                <input id="@($"dia-acesso-{festival.Id}")"
+                                                       class="form-control"
+                                                       type="date"
+                                                       value="@compra.DiaFestival.ToString("yyyy-MM-dd")"
+                                                       @onchange="e => AlterarDiaFestival(festival.Id, e.Value?.ToString())" />
+                                            </div>
+                                        }
+                                        else if (compra.Tipo == TipoAcesso.AluguerDigital)
+                                        {
+                                            <div class="col-md-4">
+                                                <label class="form-label" for="@($"horas-aluguer-{festival.Id}")">Horas</label>
+                                                <input id="@($"horas-aluguer-{festival.Id}")"
+                                                       class="form-control"
+                                                       type="number"
+                                                       min="1"
+                                                       value="@compra.HorasAluguer"
+                                                       @onchange="e => AlterarHorasAluguer(festival.Id, e.Value?.ToString())" />
+                                            </div>
+                                        }
+
+                                        <div class="col-md-3 d-grid">
+                                            <button class="btn btn-success"
+                                                    @onclick="() => AdicionarAoCarrinho(festival)">
+                                                Adicionar ao carrinho
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     }
                 </div>
@@ -47,6 +108,24 @@
             {
                 <p>Ainda nao existem festivais disponiveis.</p>
             }
+        </div>
+    }
+
+    @if (carrinho.Count > 0)
+    {
+        <div class="mt-4">
+            <h3 class="h5">Carrinho</h3>
+            <ul class="list-group">
+                @foreach (var item in carrinho)
+                {
+                    <li class="list-group-item">
+                        <strong>@item.NomeFestival</strong> - @item.TipoDescricao
+                        <span class="text-muted">
+                            (@item.Inicio.ToString("dd/MM/yyyy HH:mm") - @item.Fim.ToString("dd/MM/yyyy HH:mm"))
+                        </span>
+                    </li>
+                }
+            </ul>
         </div>
     }
 </section>
@@ -109,12 +188,20 @@
 </section>
 
 @code {
+    private const decimal PrecoPasseDiario = 9.99m;
+    private const decimal PrecoPasseCompleto = 29.99m;
+    private const decimal PrecoAluguerDigital = 14.99m;
+    private const int HorasPadraoAluguerDigital = 48;
+
     private readonly FestivalForm form = new();
+    private readonly Dictionary<int, CompraFestivalForm> comprasPorFestival = new();
+    private readonly List<CarrinhoItem> carrinho = new();
     private List<Festival> festivais = new();
     private bool mostrarFormulario;
     private bool mostrarListaUtilizador;
     private bool carregando;
     private string? mensagem;
+    private string? mensagemCarrinho;
     private string? erro;
 
     private void MostrarFormulario()
@@ -142,7 +229,94 @@
 
         festivais = await FestivalService.ListarAsync();
 
+        foreach (var festival in festivais)
+            ObterCompraFestival(festival);
+
         carregando = false;
+    }
+
+    private CompraFestivalForm ObterCompraFestival(Festival festival)
+    {
+        if (!comprasPorFestival.TryGetValue(festival.Id, out var compra))
+        {
+            compra = new CompraFestivalForm
+            {
+                Tipo = TipoAcesso.PasseDiario,
+                DiaFestival = DateTime.Today < festival.DataInicio.Date ? festival.DataInicio.Date : DateTime.Today
+            };
+
+            if (compra.DiaFestival > festival.DataFim.Date)
+                compra.DiaFestival = festival.DataFim.Date;
+
+            comprasPorFestival[festival.Id] = compra;
+        }
+
+        return compra;
+    }
+
+    private void AlterarTipoAcesso(int festivalId, string? valor)
+    {
+        if (!Enum.TryParse<TipoAcesso>(valor, out var tipo))
+            return;
+
+        comprasPorFestival[festivalId].Tipo = tipo;
+    }
+
+    private void AlterarDiaFestival(int festivalId, string? valor)
+    {
+        if (DateTime.TryParse(valor, out var dia))
+            comprasPorFestival[festivalId].DiaFestival = dia;
+    }
+
+    private void AlterarHorasAluguer(int festivalId, string? valor)
+    {
+        if (int.TryParse(valor, out var horas) && horas > 0)
+            comprasPorFestival[festivalId].HorasAluguer = horas;
+    }
+
+    private void AdicionarAoCarrinho(Festival festival)
+    {
+        try
+        {
+            var compra = ObterCompraFestival(festival);
+            var compradoEm = DateTime.Now;
+            Acesso acesso = compra.Tipo switch
+            {
+                TipoAcesso.PasseDiario => AcessoFactory.CriarPasseDiario(
+                    festival.Id,
+                    compra.DiaFestival,
+                    festival.DataInicio,
+                    festival.DataFim,
+                    PrecoPasseDiario,
+                    compradoEm),
+                TipoAcesso.PasseCompleto => AcessoFactory.CriarPasseCompleto(
+                    festival.Id,
+                    festival.DataInicio,
+                    festival.DataFim,
+                    PrecoPasseCompleto,
+                    compradoEm),
+                TipoAcesso.AluguerDigital => AcessoFactory.CriarAluguerDigitalPersonalizado(
+                    festival.Id,
+                    compra.HorasAluguer,
+                    PrecoAluguerDigital,
+                    compradoEm),
+                _ => throw new InvalidOperationException("Tipo de acesso invalido para festival.")
+            };
+
+            var janela = acesso.ObterJanelaAcesso();
+            carrinho.Add(new CarrinhoItem(
+                festival.Nome,
+                ObterDescricaoTipo(acesso.Tipo),
+                janela.Inicio,
+                janela.Fim));
+
+            mensagemCarrinho = $"{ObterDescricaoTipo(acesso.Tipo)} adicionado ao carrinho para {festival.Nome}.";
+        }
+        catch (ArgumentException ex)
+        {
+            mensagemCarrinho = null;
+            erro = ex.Message;
+        }
     }
 
     private async Task CriarFestival()
@@ -168,6 +342,31 @@
             erro = ex.Message;
         }
     }
+
+    private static string ObterDescricaoTipo(TipoAcesso tipo)
+    {
+        return tipo switch
+        {
+            TipoAcesso.PasseDiario => "Passe diario",
+            TipoAcesso.PasseCompleto => "Passe completo",
+            TipoAcesso.AluguerDigital => "Aluguer digital",
+            TipoAcesso.BilheteSessao => "Bilhete de sessao",
+            _ => "Acesso"
+        };
+    }
+
+    private sealed class CompraFestivalForm
+    {
+        public TipoAcesso Tipo { get; set; }
+        public DateTime DiaFestival { get; set; }
+        public int HorasAluguer { get; set; } = HorasPadraoAluguerDigital;
+    }
+
+    private sealed record CarrinhoItem(
+        string NomeFestival,
+        string TipoDescricao,
+        DateTime Inicio,
+        DateTime Fim);
 
     private sealed class FestivalForm
     {

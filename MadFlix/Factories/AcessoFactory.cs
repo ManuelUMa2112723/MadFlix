@@ -1,9 +1,12 @@
+using MadFlix.Decorators;
 using MadFlix.Models.Acessos;
 
 namespace MadFlix.Factories;
 
 public class AcessoFactory : IAcessoFactory
 {
+    private const int HorasBaseAluguerDigital = 48;
+
     public BilheteSessao CriarBilheteSessao(
         int filmeId,
         int sessaoId,
@@ -64,5 +67,28 @@ public class AcessoFactory : IAcessoFactory
             duracao,
             preco,
             compradoEm);
+    }
+
+    public Acesso CriarAluguerDigitalPersonalizado(
+        int festivalId,
+        int horas,
+        decimal preco,
+        DateTime compradoEm)
+    {
+        if (horas <= 0)
+            throw new ArgumentException("A duracao do aluguer tem de ser positiva.", nameof(horas));
+
+        Acesso aluguerBase = CriarAluguerDigital(
+            festivalId,
+            TimeSpan.FromHours(HorasBaseAluguerDigital),
+            preco,
+            compradoEm);
+
+        if (horas == HorasBaseAluguerDigital)
+            return aluguerBase;
+
+        return new DuracaoAluguerDigitalDecorator(
+            aluguerBase,
+            TimeSpan.FromHours(horas));
     }
 }

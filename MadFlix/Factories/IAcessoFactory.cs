@@ -32,4 +32,10 @@ public interface IAcessoFactory
         TimeSpan duracao,
         decimal preco,
         DateTime compradoEm);
+
+    Acesso CriarAluguerDigitalPersonalizado(
+        int festivalId,
+        int horas,
+        decimal preco,
+        DateTime compradoEm);
 }
