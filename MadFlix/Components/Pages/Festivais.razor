@@ -1,11 +1,11 @@
 @page "/festivais"
 @rendermode InteractiveServer
 @using MadFlix.Factories
-@using MadFlix.Models
 @using MadFlix.Models.Acessos
-@using MadFlix.Services
-@inject FestivalService FestivalService
 @inject IAcessoFactory AcessoFactory
+@inject IFestivalCatalogService FestivalCatalogService
+@inject IFestivalCreationService FestivalCreationService
+@inject NavigationManager NavigationManager
 
 <PageTitle>Festivais</PageTitle>
 
@@ -131,60 +131,67 @@
 </section>
 
 <section class="border rounded p-3">
-    <h2 class="h4">Area de administracao</h2>
-    <p class="text-muted mb-3">Zona temporaria para criar festivais. Mais tarde fica apenas para administradores.</p>
+    <h2 class="h4">Area reservada</h2>
+    <p class="text-muted mb-3">A criacao de festivais fica disponivel apenas para utilizadores autenticados.</p>
 
-    <button class="btn btn-primary mb-4" @onclick="MostrarFormulario">
-        Adicionar festival
-    </button>
+    <AuthorizeView>
+        <Authorized>
+            <button class="btn btn-primary mb-4" @onclick="MostrarFormulario">
+                Adicionar festival
+            </button>
 
-    @if (mostrarFormulario)
-    {
-        <EditForm Model="form" OnValidSubmit="CriarFestival" class="border rounded p-3 mb-4">
-            <DataAnnotationsValidator />
+            @if (mostrarFormulario)
+            {
+                <EditForm Model="form" OnValidSubmit="CriarFestival" Context="festivalEditContext" class="border rounded p-3 mb-4">
+                    <DataAnnotationsValidator />
 
-            <div class="mb-3">
-                <label class="form-label" for="nome">Nome</label>
-                <InputText id="nome" class="form-control" @bind-Value="form.Nome" placeholder="Festival de Terror" />
-            </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="nome">Nome</label>
+                        <InputText id="nome" class="form-control" @bind-Value="form.Nome" placeholder="Festival de Terror" />
+                    </div>
 
-            <div class="mb-3">
-                <label class="form-label" for="genero">Genero</label>
-                <InputText id="genero" class="form-control" @bind-Value="form.Genero" placeholder="Terror" />
-            </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="genero">Genero</label>
+                        <InputText id="genero" class="form-control" @bind-Value="form.Genero" placeholder="Terror" />
+                    </div>
 
-            <div class="mb-3">
-                <label class="form-label" for="descricao">Descricao</label>
-                <InputTextArea id="descricao" class="form-control" @bind-Value="form.Descricao" />
-            </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="descricao">Descricao</label>
+                        <InputTextArea id="descricao" class="form-control" @bind-Value="form.Descricao" />
+                    </div>
 
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label" for="dataInicio">Data de inicio</label>
-                    <InputDate id="dataInicio" class="form-control" @bind-Value="form.DataInicio" />
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label" for="dataFim">Data de fim</label>
-                    <InputDate id="dataFim" class="form-control" @bind-Value="form.DataFim" />
-                </div>
-            </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="dataInicio">Data de inicio</label>
+                            <InputDate id="dataInicio" class="form-control" @bind-Value="form.DataInicio" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="dataFim">Data de fim</label>
+                            <InputDate id="dataFim" class="form-control" @bind-Value="form.DataFim" />
+                        </div>
+                    </div>
 
-            <button class="btn btn-success" type="submit">Guardar</button>
-            <button class="btn btn-link" type="button" @onclick="EsconderFormulario">Cancelar</button>
+                    <button class="btn btn-success" type="submit">Guardar</button>
+                    <button class="btn btn-link" type="button" @onclick="EsconderFormulario">Cancelar</button>
 
-            <ValidationSummary class="text-danger mt-3" />
-        </EditForm>
-    }
+                    <ValidationSummary class="text-danger mt-3" />
+                </EditForm>
+            }
 
-    @if (!string.IsNullOrWhiteSpace(mensagem))
-    {
-        <div class="alert alert-success">@mensagem</div>
-    }
+            @if (!string.IsNullOrWhiteSpace(mensagem))
+            {
+                <div class="alert alert-success">@mensagem</div>
+            }
 
-    @if (!string.IsNullOrWhiteSpace(erro))
-    {
-        <div class="alert alert-danger">@erro</div>
-    }
+            @if (!string.IsNullOrWhiteSpace(erro))
+            {
+                <div class="alert alert-danger">@erro</div>
+            }
+        </Authorized>
+        <NotAuthorized>
+            <a class="btn btn-primary" href="@GetLoginUrl()">Iniciar sessao</a>
+        </NotAuthorized>
+    </AuthorizeView>
 </section>
 
 @code {
@@ -227,7 +234,7 @@
         carregando = true;
         erro = null;
 
-        festivais = await FestivalService.ListarAsync();
+        festivais = (await FestivalCatalogService.ListarAsync()).ToList();
 
         foreach (var festival in festivais)
             ObterCompraFestival(festival);
@@ -317,7 +324,7 @@
     {
         try
         {
-            await FestivalService.CriarAsync(
+            await FestivalCreationService.CriarAsync(
                 form.Nome,
                 form.Genero,
                 form.DataInicio,
@@ -389,5 +396,10 @@
             DataInicio = DateTime.Today;
             DataFim = DateTime.Today.AddDays(7);
         }
+    }
+
+    private string GetLoginUrl()
+    {
+        return $"/login?returnUrl={Uri.EscapeDataString(NavigationManager.ToLocalPath())}";
     }
 }

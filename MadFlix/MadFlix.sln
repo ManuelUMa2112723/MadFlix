@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MadFlix", "MadFlix.csproj", "{5436461A-513E-8637-3E12-6539485FDACE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5436461A-513E-8637-3E12-6539485FDACE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5436461A-513E-8637-3E12-6539485FDACE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5436461A-513E-8637-3E12-6539485FDACE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5436461A-513E-8637-3E12-6539485FDACE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {420C6516-44E2-4AE4-AE2F-7CEF6B4F1F50}
+	EndGlobalSection
+EndGlobal

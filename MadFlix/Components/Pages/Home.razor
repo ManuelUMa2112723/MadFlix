@@ -1,26 +1,35 @@
 @page "/"
 @rendermode InteractiveServer
-@using MadFlix.Models
-@using MadFlix.Services
-@inject NavigationManager Navigation
-@inject FilmeService FilmeService
+@inject IFilmeCatalogService FilmeCatalogService
+@inject IFilmePurchaseService FilmePurchaseService
+@inject IFilmePlaybackService FilmePlaybackService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
 
 <PageTitle>MadFlix</PageTitle>
 
 <div class="home-header">
-    <h1>MadFlix</h1>
+    <div>
+        <h1>MadFlix</h1>
+        <p class="text-muted mb-0">Qualquer visitante pode pesquisar o catalogo. Para comprar ou assistir, tem de iniciar sessao.</p>
+    </div>
 
     <div class="search-bar">
         <div class="search-type">
             <label>
-                <input type="radio" name="tipoBusca" value="filme"
-                    @onchange="OnTipoBuscaChange"
-                    checked="@(tipoBusca == "filme")" />
+                <input type="radio"
+                       name="tipoBusca"
+                       value="filme"
+                       @onchange="OnTipoBuscaChange"
+                       checked="@(tipoBusca == "filme")" />
                 Filme
             </label>
             <label>
-                <input type="radio" name="tipoBusca" value="ator"
-                    @onchange="OnTipoBuscaChange" />
+                <input type="radio"
+                       name="tipoBusca"
+                       value="ator"
+                       @onchange="OnTipoBuscaChange"
+                       checked="@(tipoBusca == "ator")" />
                 Ator
             </label>
         </div>
@@ -61,6 +70,37 @@
             <p><strong>Avaliacao IMDb:</strong> @filme.ImdbRating</p>
             <p><strong>Duracao:</strong> @filme.Runtime</p>
             <p><strong>Classificacao:</strong> @filme.Rated</p>
+
+            <div class="d-flex flex-wrap gap-2 mt-4">
+                <button class="btn btn-success" @onclick="ComprarFilmeAsync" disabled="@(!utilizadorAutenticado)">
+                    Comprar
+                </button>
+                <button class="btn btn-outline-primary" @onclick="AssistirFilmeAsync" disabled="@(!utilizadorAutenticado)">
+                    Assistir
+                </button>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(mensagemAcao))
+            {
+                <div class="alert alert-success mt-3 mb-0">@mensagemAcao</div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(erroAcao))
+            {
+                <div class="alert alert-danger mt-3 mb-0">@erroAcao</div>
+            }
+
+            @if (!utilizadorAutenticado)
+            {
+                <div class="alert alert-warning mt-3 mb-0">
+                    Esta a navegar como visitante. Inicie sessao para comprar ou assistir.
+                </div>
+
+                <div class="d-flex gap-2 mt-3">
+                    <a class="btn btn-sm btn-primary" href="@GetLoginUrl()">Iniciar sessao</a>
+                    <a class="btn btn-sm btn-outline-secondary" href="@GetRegisterUrl()">Criar conta</a>
+                </div>
+            }
         </div>
     </section>
 }
@@ -104,7 +144,7 @@
 <style>
     .home-header {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: space-between;
         gap: 1rem;
         margin-bottom: 2rem;
@@ -117,10 +157,24 @@
     .search-bar {
         display: flex;
         gap: .75rem;
-        width: min(620px, 100%);
+        width: min(700px, 100%);
     }
 
-    .search-bar input {
+    .search-type {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        white-space: nowrap;
+    }
+
+    .search-type label {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        margin: 0;
+    }
+
+    .search-bar input[type="text"] {
         flex: 1;
         padding: .65rem .8rem;
         border: 1px solid #ced4da;
@@ -204,6 +258,10 @@
             flex-direction: column;
         }
 
+        .search-type {
+            align-items: flex-start;
+        }
+
         .movie-result {
             grid-template-columns: 1fr;
         }
@@ -225,21 +283,32 @@
         "Fight Club"
     ];
 
-    private string termoBusca = string.Empty;
-    private Filme? filme;
     private readonly List<Filme> filmesRecomendados = new();
+    private string termoBusca = string.Empty;
+    private string tipoBusca = "filme";
+    private Filme? filme;
     private bool carregando;
     private bool carregandoRecomendados = true;
     private string? erro;
+    private string? mensagemAcao;
+    private string? erroAcao;
+    private bool utilizadorAutenticado;
+    private int? utilizadorId;
 
     protected override async Task OnInitializedAsync()
     {
+        await CarregarUtilizadorAtualAsync();
+        await CarregarRecomendadosAsync();
+    }
+
+    private async Task CarregarRecomendadosAsync()
+    {
         foreach (var titulo in titulosRecomendados)
         {
-            var recomendado = await FilmeService.BuscarFilmeAsync(titulo);
+            var resultado = await FilmeCatalogService.BuscarFilmeAsync(titulo);
 
-            if (recomendado != null)
-                filmesRecomendados.Add(recomendado);
+            if (resultado.Succeeded && resultado.Value is not null)
+                filmesRecomendados.Add(resultado.Value);
         }
 
         carregandoRecomendados = false;
@@ -251,7 +320,10 @@
             await Buscar();
     }
 
-    private string tipoBusca = "filme";
+    private void OnTipoBuscaChange(ChangeEventArgs e)
+    {
+        tipoBusca = e.Value?.ToString() ?? "filme";
+    }
 
     private async Task Buscar()
     {
@@ -260,27 +332,91 @@
 
         if (tipoBusca == "ator")
         {
-            Navigation.NavigateTo($"/ator?nome={Uri.EscapeDataString(termoBusca)}");
+            NavigationManager.NavigateTo($"/ator?nome={Uri.EscapeDataString(termoBusca)}");
             return;
         }
 
-        // lógica existente de búsqueda de filme...
         carregando = true;
         erro = null;
+        erroAcao = null;
+        mensagemAcao = null;
         filme = null;
 
-        filme = await FilmeService.BuscarFilmeAsync(termoBusca);
+        var resultado = await FilmeCatalogService.BuscarFilmeAsync(termoBusca);
 
-        if (filme == null)
-            erro = $"Filme '{termoBusca}' não encontrado.";
+        if (!resultado.Succeeded || resultado.Value is null)
+        {
+            erro = resultado.ErrorMessage;
+            carregando = false;
+            return;
+        }
 
+        filme = resultado.Value;
         carregando = false;
     }
 
-    private void OnTipoBuscaChange(ChangeEventArgs e)
-{
-    tipoBusca = e.Value?.ToString() ?? "filme";
-}
-}
+    private async Task AssistirFilmeAsync()
+    {
+        await CarregarUtilizadorAtualAsync();
 
+        if (!utilizadorId.HasValue || filme is null)
+        {
+            erroAcao = "Tem de iniciar sessao para assistir.";
+            mensagemAcao = null;
+            return;
+        }
 
+        var resultado = await FilmePlaybackService.AssistirAsync(utilizadorId.Value, filme.Id);
+
+        if (!resultado.Succeeded)
+        {
+            mensagemAcao = null;
+            erroAcao = resultado.ErrorMessage;
+            return;
+        }
+
+        erroAcao = null;
+        mensagemAcao = resultado.Value;
+    }
+
+    private async Task CarregarUtilizadorAtualAsync()
+    {
+        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        utilizadorId = authenticationState.User.GetMadFlixUserId();
+        utilizadorAutenticado = utilizadorId.HasValue;
+    }
+
+    private async Task ComprarFilmeAsync()
+    {
+        await CarregarUtilizadorAtualAsync();
+
+        if (!utilizadorId.HasValue || filme is null)
+        {
+            erroAcao = "Tem de iniciar sessao para comprar.";
+            mensagemAcao = null;
+            return;
+        }
+
+        var resultado = await FilmePurchaseService.ComprarAsync(utilizadorId.Value, filme.Id);
+
+        if (!resultado.Succeeded)
+        {
+            mensagemAcao = null;
+            erroAcao = resultado.ErrorMessage;
+            return;
+        }
+
+        erroAcao = null;
+        mensagemAcao = resultado.Value;
+    }
+
+    private string GetLoginUrl()
+    {
+        return $"/login?returnUrl={Uri.EscapeDataString(NavigationManager.ToLocalPath())}";
+    }
+
+    private string GetRegisterUrl()
+    {
+        return $"/registar?returnUrl={Uri.EscapeDataString(NavigationManager.ToLocalPath())}";
+    }
+}

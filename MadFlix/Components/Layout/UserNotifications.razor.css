@@ -1,0 +1,28 @@
+.notification-panel {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.notification-item {
+    background: #ffffff;
+    border: 1px solid #d6dce5;
+    border-radius: 0.75rem;
+    box-shadow: 0 8px 20px rgba(16, 24, 40, 0.08);
+    max-width: 18rem;
+    padding: 0.5rem 0.75rem;
+}
+
+.notification-item strong {
+    display: block;
+    font-size: 0.85rem;
+    margin-bottom: 0.15rem;
+}
+
+.notification-item span {
+    color: #475467;
+    display: block;
+    font-size: 0.78rem;
+    line-height: 1.3;
+}

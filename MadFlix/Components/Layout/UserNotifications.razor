@@ -1,0 +1,46 @@
+@implements IDisposable
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IUserNotificationFeed NotificationCenter
+
+@if (NotificationCenter.HasNotifications)
+{
+    <div class="notification-panel">
+        @foreach (var notification in NotificationCenter.Notifications.Take(2))
+        {
+            <div class="notification-item">
+                <strong>@notification.Titulo</strong>
+                <span>@notification.Mensagem</span>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        NotificationCenter.Changed += HandleNotificationsChanged;
+        AuthenticationStateProvider.AuthenticationStateChanged += HandleAuthenticationStateChanged;
+        await NotificationCenter.RefreshSubscriptionAsync();
+    }
+
+    private void HandleAuthenticationStateChanged(Task<AuthenticationState> authenticationStateTask)
+    {
+        _ = authenticationStateTask;
+        _ = InvokeAsync(async () =>
+        {
+            await NotificationCenter.RefreshSubscriptionAsync();
+            StateHasChanged();
+        });
+    }
+
+    private void HandleNotificationsChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        NotificationCenter.Changed -= HandleNotificationsChanged;
+        AuthenticationStateProvider.AuthenticationStateChanged -= HandleAuthenticationStateChanged;
+    }
+}

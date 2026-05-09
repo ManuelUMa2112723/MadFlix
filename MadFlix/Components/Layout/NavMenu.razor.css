@@ -81,6 +81,20 @@
     color: white;
 }
 
+.nav-user ::deep .nav-link {
+    cursor: default;
+    font-weight: 600;
+}
+
+.logout-form {
+    width: 100%;
+}
+
+.logout-form .nav-link {
+    color: #d7d7d7;
+    text-align: left;
+}
+
 .nav-scrollable {
     display: none;
 }

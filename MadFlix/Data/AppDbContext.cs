@@ -14,6 +14,9 @@ public class AppDbContext : DbContext
     public DbSet<Diretor> Diretores { get; set; }
     public DbSet<FilmeAtor> FilmeAtores { get; set; }
     public DbSet<Festival> Festivais { get; set; }
+    public DbSet<Utilizador> Utilizadores { get; set; }
+    public DbSet<FilmeCompra> FilmeCompras { get; set; }
+    public DbSet<FilmeVisualizacao> FilmeVisualizacoes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -39,5 +42,41 @@ public class AppDbContext : DbContext
             .HasOne(fa => fa.Ator)
             .WithMany(a => a.FilmeAtores)
             .HasForeignKey(fa => fa.AtorId);
+
+        modelBuilder.Entity<Utilizador>()
+            .HasIndex(u => u.NomeUtilizadorNormalizado)
+            .IsUnique();
+
+        modelBuilder.Entity<Utilizador>()
+            .HasIndex(u => u.EmailNormalizado)
+            .IsUnique();
+
+        modelBuilder.Entity<FilmeCompra>()
+            .HasIndex(fc => new { fc.UtilizadorId, fc.FilmeId })
+            .IsUnique();
+
+        modelBuilder.Entity<FilmeCompra>()
+            .HasOne(fc => fc.Utilizador)
+            .WithMany(u => u.Compras)
+            .HasForeignKey(fc => fc.UtilizadorId);
+
+        modelBuilder.Entity<FilmeCompra>()
+            .HasOne(fc => fc.Filme)
+            .WithMany(f => f.Compras)
+            .HasForeignKey(fc => fc.FilmeId);
+
+        modelBuilder.Entity<FilmeVisualizacao>()
+            .HasIndex(fv => new { fv.UtilizadorId, fv.FilmeId })
+            .IsUnique();
+
+        modelBuilder.Entity<FilmeVisualizacao>()
+            .HasOne(fv => fv.Utilizador)
+            .WithMany(u => u.Visualizacoes)
+            .HasForeignKey(fv => fv.UtilizadorId);
+
+        modelBuilder.Entity<FilmeVisualizacao>()
+            .HasOne(fv => fv.Filme)
+            .WithMany(f => f.Visualizacoes)
+            .HasForeignKey(fv => fv.FilmeId);
     }
 }

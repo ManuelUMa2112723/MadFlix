@@ -1,4 +1,6 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@inject NavigationManager NavigationManager
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">MadFlix</a>
     </div>
@@ -31,6 +33,46 @@
                 <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
             </NavLink>
         </div>
+
+        <AuthorizeView>
+            <Authorized Context="authState">
+                <div class="nav-item px-3 nav-user">
+                    <span class="nav-link">Ola, @authState.User.Identity?.Name</span>
+                </div>
+
+                <div class="nav-item px-3">
+                    <form class="logout-form" method="post" action="/auth/logout">
+                        <AntiforgeryToken />
+                        <input type="hidden" name="returnUrl" value="@NavigationManager.ToLocalPath()" />
+                        <button class="nav-link" type="submit">Terminar sessao</button>
+                    </form>
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="@GetLoginUrl()">
+                        <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Iniciar sessao
+                    </NavLink>
+                </div>
+
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="@GetRegisterUrl()">
+                        <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Criar conta
+                    </NavLink>
+                </div>
+            </NotAuthorized>
+        </AuthorizeView>
     </nav>
 </div>
 
+@code {
+    private string GetLoginUrl()
+    {
+        return $"/login?returnUrl={Uri.EscapeDataString(NavigationManager.ToLocalPath())}";
+    }
+
+    private string GetRegisterUrl()
+    {
+        return $"/registar?returnUrl={Uri.EscapeDataString(NavigationManager.ToLocalPath())}";
+    }
+}
