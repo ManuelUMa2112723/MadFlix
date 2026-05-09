@@ -31,7 +31,7 @@ public static class AuthEndpointRouteBuilderExtensions
 
         await sessionService.SignInAsync(httpContext, result.Value);
 
-        return Results.LocalRedirect(NavigationHelpers.NormalizeReturnUrl(request.ReturnUrl));
+        return Results.LocalRedirect("/");
     }
 
     private static async Task<IResult> RegisterAsync(
@@ -57,7 +57,7 @@ public static class AuthEndpointRouteBuilderExtensions
 
         await sessionService.SignInAsync(httpContext, result.Value);
 
-        return Results.LocalRedirect(NavigationHelpers.NormalizeReturnUrl(request.ReturnUrl));
+        return Results.LocalRedirect("/");
     }
 
     private static async Task<IResult> LogoutAsync(
