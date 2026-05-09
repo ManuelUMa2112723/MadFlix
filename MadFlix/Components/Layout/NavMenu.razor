@@ -44,14 +44,16 @@
                     <form class="logout-form" method="post" action="/auth/logout">
                         <AntiforgeryToken />
                         <input type="hidden" name="returnUrl" value="@NavigationManager.ToLocalPath()" />
-                        <button class="nav-link" type="submit">Terminar sessao</button>
+                        <button class="nav-link" type="submit">
+                            <span class="bi bi-box-arrow-right-nav-menu" aria-hidden="true"></span> Terminar sessao
+                        </button>
                     </form>
                 </div>
             </Authorized>
             <NotAuthorized>
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="@GetLoginUrl()">
-                        <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Iniciar sessao
+                        <span class="bi bi-box-arrow-in-right-nav-menu" aria-hidden="true"></span> Iniciar sessao
                     </NavLink>
                 </div>
 
