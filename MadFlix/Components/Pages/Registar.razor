@@ -1,4 +1,6 @@
 @page "/registar"
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
 
 <PageTitle>Criar conta</PageTitle>
 
@@ -50,6 +52,16 @@
     public string? ReturnUrl { get; set; }
 
     private string ResolvedReturnUrl => NavigationHelpers.NormalizeReturnUrl(ReturnUrl);
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+        if (authenticationState.User.Identity?.IsAuthenticated == true)
+        {
+            NavigationManager.NavigateTo("/", replace: true);
+        }
+    }
 
     private string GetLoginUrl()
     {
