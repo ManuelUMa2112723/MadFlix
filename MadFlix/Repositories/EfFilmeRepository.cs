@@ -27,9 +27,25 @@ public sealed class EfFilmeRepository : IFilmeRepository
                 cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Filme>> ListarPorFestivalAsync(
+        int festivalId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.Filmes
+            .Where(filme => filme.FestivalId == festivalId)
+            .OrderBy(filme => filme.Titulo)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task AddAsync(Filme filme, CancellationToken cancellationToken = default)
     {
         _context.Filmes.Add(filme);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task UpdateAsync(Filme filme, CancellationToken cancellationToken = default)
+    {
+        _context.Filmes.Update(filme);
         await _context.SaveChangesAsync(cancellationToken);
     }
 }

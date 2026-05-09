@@ -40,6 +40,24 @@ public sealed class UserNotificationDispatcher : IUserNotificationSubject
         return Task.CompletedTask;
     }
 
+    public Task NotifyAllAsync(
+        UserNotification notificacao,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(notificacao);
+
+        foreach (var observers in _subscriptions.Values)
+        {
+            foreach (var observer in observers.Values)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                observer.OnNext(notificacao);
+            }
+        }
+
+        return Task.CompletedTask;
+    }
+
     private sealed class Subscription : IDisposable
     {
         private readonly ConcurrentDictionary<int, ConcurrentDictionary<Guid, IObserver<UserNotification>>> _subscriptions;

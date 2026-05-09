@@ -9,4 +9,8 @@ public interface IUserNotificationSubject
         int utilizadorId,
         UserNotification notificacao,
         CancellationToken cancellationToken = default);
+
+    Task NotifyAllAsync(
+        UserNotification notificacao,
+        CancellationToken cancellationToken = default);
 }

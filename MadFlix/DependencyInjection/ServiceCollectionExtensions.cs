@@ -10,6 +10,7 @@ using MadFlix.Models.Acessos.FactoriesAcessos;
 using MadFlix.Models.Acessos.InterfaceAcessos;
 using MadFlix.Models.Festivais.FactoriesFestivais;
 using MadFlix.Models.Festivais.InterfaceFestivais;
+using MadFlix.Models.Festivais.ObserverFestivais;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 
@@ -74,9 +75,12 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IFestivalCatalogService, FestivalCatalogService>();
         services.AddScoped<IFestivalCreationService, FestivalCreationService>();
+        services.AddScoped<IFestivalMovieService, FestivalMovieService>();
         services.AddScoped<ICarrinhoService, CarrinhoService>();
 
         services.AddSingleton<IUserNotificationSubject, UserNotificationDispatcher>();
+        services.AddSingleton<IFestivalSubject, FestivalSubject>();
+        services.AddSingleton<IFestivalObserver, FestivalNotificationObserver>();
         services.AddScoped<IUserNotificationFeed, UserNotificationCenter>();
 
         return services;

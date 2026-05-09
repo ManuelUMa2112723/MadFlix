@@ -5,6 +5,7 @@
 @inject ICarrinhoService CarrinhoService
 @inject IFestivalCatalogService FestivalCatalogService
 @inject IFestivalCreationService FestivalCreationService
+@inject IFestivalMovieService FestivalMovieService
 @inject NavigationManager NavigationManager
 
 <PageTitle>Festivais</PageTitle>
@@ -51,6 +52,12 @@
                                     {
                                         <p class="mb-0">@festival.Descricao</p>
                                     }
+
+                                    <button class="btn btn-sm btn-outline-secondary mt-3"
+                                            type="button"
+                                            @onclick="() => AlternarCatalogoFestival(festival.Id)">
+                                        @ObterTextoBotaoCatalogo(festival.Id)
+                                    </button>
                                 </div>
 
                                 <div class="col-lg-5">
@@ -111,6 +118,35 @@
                                     </div>
                                 </div>
                             </div>
+
+                            @if (catalogosAbertos.Contains(festival.Id))
+                            {
+                                <div class="border-top mt-3 pt-3">
+                                    @if (catalogosACarregar.Contains(festival.Id))
+                                    {
+                                        <p class="text-muted mb-0">A carregar catalogo...</p>
+                                    }
+                                    else if (filmesPorFestival.TryGetValue(festival.Id, out var filmesFestival) && filmesFestival.Count > 0)
+                                    {
+                                        <div class="row g-3">
+                                            @foreach (var filmeFestival in filmesFestival)
+                                            {
+                                                <div class="col-md-6 col-xl-4">
+                                                    <div class="border rounded p-3 h-100">
+                                                        <strong>@filmeFestival.Titulo</strong>
+                                                        <p class="text-muted mb-1">@filmeFestival.Genero</p>
+                                                        <small>@filmeFestival.Ano</small>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <p class="text-muted mb-0">Este festival ainda nao tem filmes no catalogo.</p>
+                                    }
+                                </div>
+                            }
                         </div>
                     }
                 </div>
@@ -181,6 +217,43 @@
             {
                 <div class="alert alert-danger">@erro</div>
             }
+
+            <div class="border rounded p-3 mt-4">
+                <h3 class="h5">Adicionar filme a festival</h3>
+
+                @if (festivais.Count == 0)
+                {
+                    <p class="text-muted mb-0">Crie primeiro um festival para poder associar filmes.</p>
+                }
+                else
+                {
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-5">
+                            <label class="form-label" for="festival-filme">Festival</label>
+                            <select id="festival-filme" class="form-select" @bind="filmeFestivalForm.FestivalId">
+                                @foreach (var festival in festivais)
+                                {
+                                    <option value="@festival.Id">@festival.Nome</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="col-md-5">
+                            <label class="form-label" for="titulo-filme-festival">Titulo do filme</label>
+                            <input id="titulo-filme-festival"
+                                   class="form-control"
+                                   @bind="filmeFestivalForm.Titulo"
+                                   placeholder="Inception" />
+                        </div>
+
+                        <div class="col-md-2 d-grid">
+                            <button class="btn btn-success" type="button" @onclick="AdicionarFilmeAoFestival">
+                                Adicionar
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
         </Authorized>
         <NotAuthorized>
             <a class="btn btn-primary" href="@GetLoginUrl()">Iniciar sessao</a>
@@ -195,7 +268,11 @@
     private const int HorasPadraoAluguerDigital = 48;
 
     private readonly FestivalForm form = new();
+    private readonly FilmeFestivalForm filmeFestivalForm = new();
     private readonly Dictionary<int, CompraFestivalForm> comprasPorFestival = new();
+    private readonly Dictionary<int, List<Filme>> filmesPorFestival = new();
+    private readonly HashSet<int> catalogosAbertos = new();
+    private readonly HashSet<int> catalogosACarregar = new();
     private List<Festival> festivais = new();
     private bool mostrarFormulario;
     private bool mostrarListaUtilizador;
@@ -203,6 +280,11 @@
     private string? mensagem;
     private string? mensagemCarrinho;
     private string? erro;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarFestivais();
+    }
 
     private void MostrarFormulario()
     {
@@ -232,7 +314,35 @@
         foreach (var festival in festivais)
             ObterCompraFestival(festival);
 
+        if (filmeFestivalForm.FestivalId == 0 && festivais.Count > 0)
+            filmeFestivalForm.FestivalId = festivais[0].Id;
+
         carregando = false;
+    }
+
+    private async Task AlternarCatalogoFestival(int festivalId)
+    {
+        if (!catalogosAbertos.Add(festivalId))
+        {
+            catalogosAbertos.Remove(festivalId);
+            return;
+        }
+
+        await CarregarCatalogoFestival(festivalId);
+    }
+
+    private async Task CarregarCatalogoFestival(int festivalId)
+    {
+        catalogosACarregar.Add(festivalId);
+        filmesPorFestival[festivalId] = (await FestivalMovieService.ListarFilmesAsync(festivalId)).ToList();
+        catalogosACarregar.Remove(festivalId);
+    }
+
+    private string ObterTextoBotaoCatalogo(int festivalId)
+    {
+        return catalogosAbertos.Contains(festivalId)
+            ? "Esconder catalogo"
+            : "Ver catalogo de filmes";
     }
 
     private CompraFestivalForm ObterCompraFestival(Festival festival)
@@ -333,13 +443,33 @@
             mostrarFormulario = false;
             mensagem = "Festival criado com sucesso.";
 
-            if (mostrarListaUtilizador)
-                await CarregarFestivais();
+            await CarregarFestivais();
         }
         catch (ArgumentException ex)
         {
             erro = ex.Message;
         }
+    }
+
+    private async Task AdicionarFilmeAoFestival()
+    {
+        var resultado = await FestivalMovieService.AdicionarFilmeAsync(
+            filmeFestivalForm.FestivalId,
+            filmeFestivalForm.Titulo);
+
+        if (!resultado.Succeeded)
+        {
+            erro = resultado.ErrorMessage;
+            mensagem = null;
+            return;
+        }
+
+        mensagem = resultado.Value;
+        erro = null;
+        filmeFestivalForm.Titulo = string.Empty;
+
+        if (catalogosAbertos.Contains(filmeFestivalForm.FestivalId))
+            await CarregarCatalogoFestival(filmeFestivalForm.FestivalId);
     }
 
     private static string ObterDescricaoTipo(TipoAcesso tipo)
@@ -388,6 +518,12 @@
             DataInicio = DateTime.Today;
             DataFim = DateTime.Today.AddDays(7);
         }
+    }
+
+    private sealed class FilmeFestivalForm
+    {
+        public int FestivalId { get; set; }
+        public string Titulo { get; set; } = string.Empty;
     }
 
     private string GetLoginUrl()
