@@ -1,5 +1,5 @@
-using MadFlix.Factories;
 using MadFlix.Models;
+using MadFlix.Models.Festivais.InterfaceFestivais;
 using MadFlix.Repositories;
 
 namespace MadFlix.Services.Festivais;

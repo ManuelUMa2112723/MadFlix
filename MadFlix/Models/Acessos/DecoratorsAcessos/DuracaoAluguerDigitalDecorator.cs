@@ -1,6 +1,7 @@
 using MadFlix.Models.Acessos;
+using MadFlix.Models.Acessos.AbstractAcessos;
 
-namespace MadFlix.Decorators;
+namespace MadFlix.Models.Acessos.DecoratorsAcessos;
 
 public sealed class DuracaoAluguerDigitalDecorator : AcessoDecorator
 {

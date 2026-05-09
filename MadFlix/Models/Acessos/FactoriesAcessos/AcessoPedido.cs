@@ -1,6 +1,7 @@
 using MadFlix.Models.Acessos;
+using MadFlix.Models.Acessos.DecoratorsAcessos;
 
-namespace MadFlix.Factories;
+namespace MadFlix.Models.Acessos.FactoriesAcessos;
 
 public sealed class AcessoPedido
 {

@@ -1,4 +1,6 @@
-namespace MadFlix.Models.Acessos;
+using MadFlix.Models.Acessos.AbstractAcessos;
+
+namespace MadFlix.Models.Acessos.ConcreteAcessos;
 
 public sealed class BilheteSessao : Acesso
 {

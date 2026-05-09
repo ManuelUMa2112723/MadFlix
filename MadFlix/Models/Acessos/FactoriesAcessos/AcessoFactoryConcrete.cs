@@ -1,7 +1,9 @@
-using MadFlix.Decorators;
 using MadFlix.Models.Acessos;
+using MadFlix.Models.Acessos.AbstractAcessos;
+using MadFlix.Models.Acessos.ConcreteAcessos;
+using MadFlix.Models.Acessos.DecoratorsAcessos;
 
-namespace MadFlix.Factories;
+namespace MadFlix.Models.Acessos.FactoriesAcessos;
 
 public class AcessoFactoryConcrete : AcessoFactory
 {

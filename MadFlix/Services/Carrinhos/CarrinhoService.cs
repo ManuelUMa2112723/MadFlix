@@ -1,7 +1,9 @@
 using MadFlix.Contracts.Common;
-using MadFlix.Factories;
 using MadFlix.Models;
 using MadFlix.Models.Acessos;
+using MadFlix.Models.Acessos.DecoratorsAcessos;
+using MadFlix.Models.Acessos.FactoriesAcessos;
+using MadFlix.Models.Acessos.InterfaceAcessos;
 using MadFlix.Repositories;
 using MadFlix.Services.Notifications;
 
@@ -11,19 +13,24 @@ public sealed class CarrinhoService : ICarrinhoService
 {
     private readonly IAcessoFactory _acessoFactory;
     private readonly ICarrinhoRepository _carrinhoRepository;
+    private readonly IFilmeRepository _filmeRepository;
     private readonly IFestivalRepository _festivalRepository;
     private readonly IUserNotificationSubject _notificationSubject;
     private readonly IUtilizadorRepository _utilizadorRepository;
+    private const int SessaoEstaticaId = 1;
+    private static readonly TimeSpan DuracaoJanelaBilheteSessao = TimeSpan.FromHours(5);
 
     public CarrinhoService(
         IAcessoFactory acessoFactory,
         ICarrinhoRepository carrinhoRepository,
+        IFilmeRepository filmeRepository,
         IFestivalRepository festivalRepository,
         IUserNotificationSubject notificationSubject,
         IUtilizadorRepository utilizadorRepository)
     {
         _acessoFactory = acessoFactory;
         _carrinhoRepository = carrinhoRepository;
+        _filmeRepository = filmeRepository;
         _festivalRepository = festivalRepository;
         _notificationSubject = notificationSubject;
         _utilizadorRepository = utilizadorRepository;
@@ -102,6 +109,61 @@ public sealed class CarrinhoService : ICarrinhoService
         }, cancellationToken);
 
         return ServiceResult<string>.Success($"{ObterDescricaoTipo(acesso.Tipo)} adicionado ao carrinho.");
+    }
+
+    public async Task<ServiceResult<string>> AdicionarBilheteSessaoAsync(
+        int utilizadorId,
+        int filmeId,
+        DateTime inicioSessao,
+        decimal preco,
+        CancellationToken cancellationToken = default)
+    {
+        var utilizador = await _utilizadorRepository.GetByIdAsync(utilizadorId, cancellationToken);
+
+        if (utilizador is null)
+            return ServiceResult<string>.Failure("Utilizador nao encontrado.");
+
+        var filme = await _filmeRepository.GetByIdAsync(filmeId, cancellationToken);
+
+        if (filme is null)
+            return ServiceResult<string>.Failure("Filme nao encontrado.");
+
+        var fimSessao = inicioSessao.Add(DuracaoJanelaBilheteSessao);
+        var pedido = new AcessoPedido
+        {
+            Tipo = TipoAcesso.BilheteSessao,
+            FilmeId = filme.Id,
+            SessaoId = SessaoEstaticaId,
+            InicioSessao = inicioSessao,
+            FimSessao = fimSessao,
+            Preco = preco,
+            CompradoEm = DateTime.Now
+        };
+
+        var acesso = _acessoFactory.Criar(pedido);
+        var janela = acesso.ObterJanelaAcesso();
+        var carrinho = await ObterOuCriarCarrinhoAsync(utilizadorId, cancellationToken);
+
+        await _carrinhoRepository.AddItemAsync(new CarrinhoItem
+        {
+            CarrinhoId = carrinho.Id,
+            TipoAcesso = acesso.Tipo,
+            FilmeId = filme.Id,
+            SessaoId = SessaoEstaticaId,
+            Preco = preco,
+            InicioAcessoUtc = janela.Inicio.ToUniversalTime(),
+            FimAcessoUtc = janela.Fim.ToUniversalTime(),
+            AdicionadoEmUtc = DateTime.UtcNow
+        }, cancellationToken);
+
+        await _notificationSubject.NotifyUserAsync(utilizadorId, new UserNotification
+        {
+            Titulo = "Carrinho atualizado",
+            Mensagem = $"Bilhete de sessao adicionado ao carrinho para {filme.Titulo}.",
+            Tipo = "carrinho"
+        }, cancellationToken);
+
+        return ServiceResult<string>.Success("Bilhete de sessao adicionado ao carrinho.");
     }
 
     public async Task<ServiceResult<string>> RemoverItemAsync(

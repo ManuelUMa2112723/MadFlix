@@ -1,6 +1,9 @@
 using MadFlix.Models.Acessos;
+using MadFlix.Models.Acessos.AbstractAcessos;
+using MadFlix.Models.Acessos.DecoratorsAcessos;
+using MadFlix.Models.Acessos.InterfaceAcessos;
 
-namespace MadFlix.Factories;
+namespace MadFlix.Models.Acessos.FactoriesAcessos;
 
 public abstract class AcessoFactory : IAcessoFactory
 {

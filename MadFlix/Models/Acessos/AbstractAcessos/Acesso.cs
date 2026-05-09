@@ -1,4 +1,4 @@
-namespace MadFlix.Models.Acessos;
+namespace MadFlix.Models.Acessos.AbstractAcessos;
 
 public abstract class Acesso
 {

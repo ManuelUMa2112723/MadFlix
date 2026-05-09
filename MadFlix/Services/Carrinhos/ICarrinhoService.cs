@@ -19,6 +19,13 @@ public interface ICarrinhoService
         decimal preco,
         CancellationToken cancellationToken = default);
 
+    Task<ServiceResult<string>> AdicionarBilheteSessaoAsync(
+        int utilizadorId,
+        int filmeId,
+        DateTime inicioSessao,
+        decimal preco,
+        CancellationToken cancellationToken = default);
+
     Task<ServiceResult<string>> RemoverItemAsync(
         int utilizadorId,
         int itemId,

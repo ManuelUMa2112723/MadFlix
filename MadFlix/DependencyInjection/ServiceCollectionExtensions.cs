@@ -1,5 +1,4 @@
 using MadFlix.Data;
-using MadFlix.Factories;
 using MadFlix.Repositories;
 using MadFlix.Services;
 using MadFlix.Services.Auth;
@@ -7,6 +6,10 @@ using MadFlix.Services.Carrinhos;
 using MadFlix.Services.Festivais;
 using MadFlix.Services.Filmes;
 using MadFlix.Services.Notifications;
+using MadFlix.Models.Acessos.FactoriesAcessos;
+using MadFlix.Models.Acessos.InterfaceAcessos;
+using MadFlix.Models.Festivais.FactoriesFestivais;
+using MadFlix.Models.Festivais.InterfaceFestivais;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 

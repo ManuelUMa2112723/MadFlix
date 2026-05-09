@@ -1,6 +1,6 @@
 using MadFlix.Models;
 
-namespace MadFlix.Factories;
+namespace MadFlix.Models.Festivais.InterfaceFestivais;
 
 public interface IFestivalFactory
 {
