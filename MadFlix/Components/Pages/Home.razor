@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @using MadFlix.Models
 @using MadFlix.Services
+@inject NavigationManager Navigation
 @inject FilmeService FilmeService
 
 <PageTitle>MadFlix</PageTitle>
@@ -10,10 +11,24 @@
     <h1>MadFlix</h1>
 
     <div class="search-bar">
+        <div class="search-type">
+            <label>
+                <input type="radio" name="tipoBusca" value="filme"
+                    @onchange="OnTipoBuscaChange"
+                    checked="@(tipoBusca == "filme")" />
+                Filme
+            </label>
+            <label>
+                <input type="radio" name="tipoBusca" value="ator"
+                    @onchange="OnTipoBuscaChange" />
+                Ator
+            </label>
+        </div>
+
         <input type="text"
                @oninput="e => termoBusca = e.Value?.ToString() ?? string.Empty"
                @onkeydown="PesquisarComEnter"
-               placeholder="Pesquisar filme..." />
+               placeholder="@(tipoBusca == "filme" ? "Pesquisar filme..." : "Pesquisar ator...")" />
 
         <button class="btn btn-primary" @onclick="Buscar">
             Pesquisar
@@ -236,11 +251,20 @@
             await Buscar();
     }
 
+    private string tipoBusca = "filme";
+
     private async Task Buscar()
     {
         if (string.IsNullOrWhiteSpace(termoBusca))
             return;
 
+        if (tipoBusca == "ator")
+        {
+            Navigation.NavigateTo($"/ator?nome={Uri.EscapeDataString(termoBusca)}");
+            return;
+        }
+
+        // lógica existente de búsqueda de filme...
         carregando = true;
         erro = null;
         filme = null;
@@ -248,8 +272,15 @@
         filme = await FilmeService.BuscarFilmeAsync(termoBusca);
 
         if (filme == null)
-            erro = $"Filme '{termoBusca}' nao encontrado.";
+            erro = $"Filme '{termoBusca}' não encontrado.";
 
         carregando = false;
     }
+
+    private void OnTipoBuscaChange(ChangeEventArgs e)
+{
+    tipoBusca = e.Value?.ToString() ?? "filme";
 }
+}
+
+

@@ -1,0 +1,130 @@
+@page "/ator"
+@rendermode InteractiveServer
+@using MadFlix.Models
+@using MadFlix.Services
+@inject FilmeService FilmeService
+
+<PageTitle>@(nomeAtor ?? "Ator")</PageTitle>
+
+@if (carregando)
+{
+    <p>A pesquisar ator...</p>
+}
+else if (erro != null)
+{
+    <div class="alert alert-danger">@erro</div>
+}
+else
+{
+    <h1>@nomeAtor</h1>
+
+    @if (filmes.Count > 0)
+    {
+        <div class="movie-grid">
+            @foreach (var filme in filmes)
+            {
+                <article class="movie-card">
+                    @if (!string.IsNullOrWhiteSpace(filme.PosterPath))
+                    {
+                        <img src="https://image.tmdb.org/t/p/w500@(filme.PosterPath)" alt="@filme.Title" />
+                    }
+                    else
+                    {
+                        <div class="movie-card-placeholder">@filme.Title</div>
+                    }
+                    <div class="movie-card-body">
+                        <h3>@filme.Title</h3>
+                        <p>@filme.ReleaseDate</p>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+    else
+    {
+        <p>Nenhum filme encontrado para este ator.</p>
+    }
+}
+
+<style>
+    .movie-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .movie-card {
+        border: 1px solid #dee2e6;
+        border-radius: .5rem;
+        overflow: hidden;
+        background: #fff;
+    }
+
+    .movie-card img,
+    .movie-card-placeholder {
+        width: 100%;
+        aspect-ratio: 2 / 3;
+        object-fit: cover;
+        background: #111827;
+        color: #fff;
+    }
+
+    .movie-card-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        text-align: center;
+        font-weight: 600;
+    }
+
+    .movie-card-body {
+        padding: .75rem;
+    }
+
+    .movie-card-body h3 {
+        font-size: 1rem;
+        margin: 0 0 .35rem;
+    }
+
+    .movie-card-body p {
+        color: #6c757d;
+        font-size: .9rem;
+        margin: 0;
+    }
+</style>
+
+@code {
+    [SupplyParameterFromQuery(Name = "nome")]
+    public string? Nome { get; set; }
+
+    private string? nomeAtor;
+    private List<TmdbFilmeResumo> filmes = new();
+    private bool carregando = true;
+    private string? erro;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Nome))
+        {
+            erro = "Nome do ator não fornecido.";
+            carregando = false;
+            return;
+        }
+
+        var resultado = await FilmeService.BuscarFilmesPorAtorAsync(Nome);
+
+        if (resultado == null)
+        {
+            erro = $"Ator '{Nome}' não encontrado.";
+        }
+        else
+        {
+            nomeAtor = resultado.Value.Nome;
+            filmes = resultado.Value.Filmes;
+        }
+
+        carregando = false;
+    }
+}

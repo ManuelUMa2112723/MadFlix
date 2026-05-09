@@ -30,6 +30,9 @@ namespace MadFlix.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("TmdbId")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
 
                     b.ToTable("Atores");
@@ -47,6 +50,9 @@ namespace MadFlix.Migrations
                     b.Property<string>("Nome")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<int?>("TmdbId")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -102,8 +108,8 @@ namespace MadFlix.Migrations
                     b.Property<string>("ImdbId")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("ImdbRating")
-                        .HasColumnType("TEXT");
+                    b.Property<float?>("ImdbRating")
+                        .HasColumnType("REAL");
 
                     b.Property<string>("Poster")
                         .HasColumnType("TEXT");
@@ -120,6 +126,9 @@ namespace MadFlix.Migrations
                     b.Property<string>("Titulo")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<int?>("TmdbId")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 

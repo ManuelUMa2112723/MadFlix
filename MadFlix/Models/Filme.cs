@@ -2,6 +2,7 @@ namespace MadFlix.Models;
 
 public class Filme
 {
+    public int? TmdbId { get; set; }
     public int Id { get; set; }
     public string Titulo { get; set; } = string.Empty;
     public int Ano { get; set; }
@@ -10,7 +11,7 @@ public class Filme
 
     public string? Poster { get; set; }
     public string? ImdbId { get; set; }
-    public string? ImdbRating { get; set; }
+    public float? ImdbRating { get; set; }
     public string? Runtime { get; set; }
     public string? Rated { get; set; }
 

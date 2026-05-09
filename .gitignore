@@ -6,9 +6,6 @@
 *.user
 *.suo
 *.cache
-*.db-shm
-*.db-wal
 
-*.db
 
 **/appsettings.Development.json
