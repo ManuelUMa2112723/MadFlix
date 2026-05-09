@@ -1,0 +1,186 @@
+@implements IDisposable
+@using MadFlix.Models.Acessos
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ICarrinhoService CarrinhoService
+
+<AuthorizeView>
+    <Authorized>
+        <button class="cart-button" type="button" title="Carrinho" @onclick="AbrirCarrinho">
+            <span aria-hidden="true">🛒</span>
+            @if (itens.Count > 0)
+            {
+                <span class="cart-count">@itens.Count</span>
+            }
+        </button>
+
+        @if (aberto)
+        {
+            <div class="cart-backdrop" @onclick="FecharCarrinho"></div>
+            <aside class="cart-drawer" aria-label="Carrinho">
+                <div class="cart-header">
+                    <div>
+                        <h2>Carrinho</h2>
+                        <span>@itens.Count item(s)</span>
+                    </div>
+                    <button class="btn-close" type="button" aria-label="Fechar" @onclick="FecharCarrinho"></button>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(mensagem))
+                {
+                    <div class="alert alert-success">@mensagem</div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(erro))
+                {
+                    <div class="alert alert-danger">@erro</div>
+                }
+
+                @if (aCarregar)
+                {
+                    <p>A carregar carrinho...</p>
+                }
+                else if (itens.Count == 0)
+                {
+                    <p class="cart-empty">Ainda nao adicionaste acessos ao carrinho.</p>
+                }
+                else
+                {
+                    <div class="cart-items">
+                        @foreach (var item in itens)
+                        {
+                            <div class="cart-item">
+                                <div>
+                                    <strong>@ObterNomeItem(item)</strong>
+                                    <span>@ObterDescricaoTipo(item.TipoAcesso)</span>
+                                    <small>
+                                        @item.InicioAcessoUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                        -
+                                        @item.FimAcessoUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                    </small>
+                                </div>
+                                <button class="btn btn-sm btn-outline-danger"
+                                        type="button"
+                                        @onclick="() => RemoverItem(item.Id)">
+                                    Remover
+                                </button>
+                            </div>
+                        }
+                    </div>
+                }
+
+                <div class="cart-footer">
+                    <button class="btn btn-outline-secondary" type="button" @onclick="FecharCarrinho">
+                        Voltar atras
+                    </button>
+                    <button class="btn btn-primary" type="button" disabled="@(itens.Count == 0)">
+                        Finalizar pagamento
+                    </button>
+                </div>
+            </aside>
+        }
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    private List<CarrinhoItem> itens = new();
+    private bool aberto;
+    private bool aCarregar;
+    private string? mensagem;
+    private string? erro;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationStateProvider.AuthenticationStateChanged += HandleAuthenticationStateChanged;
+        await CarregarCarrinho();
+    }
+
+    private async Task AbrirCarrinho()
+    {
+        aberto = true;
+        mensagem = null;
+        erro = null;
+        await CarregarCarrinho();
+    }
+
+    private void FecharCarrinho()
+    {
+        aberto = false;
+    }
+
+    private async Task CarregarCarrinho()
+    {
+        var utilizadorId = await ObterUtilizadorIdAutenticado();
+
+        if (utilizadorId is null)
+        {
+            itens = new List<CarrinhoItem>();
+            return;
+        }
+
+        aCarregar = true;
+        itens = (await CarrinhoService.ListarItensAsync(utilizadorId.Value)).ToList();
+        aCarregar = false;
+    }
+
+    private async Task RemoverItem(int itemId)
+    {
+        var utilizadorId = await ObterUtilizadorIdAutenticado();
+
+        if (utilizadorId is null)
+        {
+            erro = "Tem de iniciar sessao para alterar o carrinho.";
+            return;
+        }
+
+        var resultado = await CarrinhoService.RemoverItemAsync(utilizadorId.Value, itemId);
+
+        if (!resultado.Succeeded)
+        {
+            erro = resultado.ErrorMessage;
+            mensagem = null;
+            return;
+        }
+
+        mensagem = resultado.Value;
+        erro = null;
+        await CarregarCarrinho();
+    }
+
+    private async Task<int?> ObterUtilizadorIdAutenticado()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        return authState.User.GetMadFlixUserId();
+    }
+
+    private void HandleAuthenticationStateChanged(Task<AuthenticationState> authenticationStateTask)
+    {
+        _ = authenticationStateTask;
+        _ = InvokeAsync(async () =>
+        {
+            await CarregarCarrinho();
+            StateHasChanged();
+        });
+    }
+
+    private static string ObterNomeItem(CarrinhoItem item)
+    {
+        return item.Festival?.Nome ?? item.Filme?.Titulo ?? "Acesso";
+    }
+
+    private static string ObterDescricaoTipo(TipoAcesso tipo)
+    {
+        return tipo switch
+        {
+            TipoAcesso.PasseDiario => "Passe diario",
+            TipoAcesso.PasseCompleto => "Passe completo",
+            TipoAcesso.AluguerDigital => "Aluguer digital",
+            TipoAcesso.BilheteSessao => "Bilhete de sessao",
+            _ => "Acesso"
+        };
+    }
+
+    public void Dispose()
+    {
+        AuthenticationStateProvider.AuthenticationStateChanged -= HandleAuthenticationStateChanged;
+    }
+}

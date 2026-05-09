@@ -24,4 +24,5 @@ public class Filme
     public ICollection<FilmeAtor> FilmeAtores { get; set; } = new List<FilmeAtor>();
     public ICollection<FilmeCompra> Compras { get; set; } = new List<FilmeCompra>();
     public ICollection<FilmeVisualizacao> Visualizacoes { get; set; } = new List<FilmeVisualizacao>();
+    public ICollection<CarrinhoItem> CarrinhoItens { get; set; } = new List<CarrinhoItem>();
 }

@@ -14,4 +14,5 @@ public class Festival
     public DateTime DataFim { get; set; }
 
     public ICollection<Filme> Filmes { get; set; } = new List<Filme>();
+    public ICollection<CarrinhoItem> CarrinhoItens { get; set; } = new List<CarrinhoItem>();
 }

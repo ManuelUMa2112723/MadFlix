@@ -13,6 +13,12 @@ public sealed class EfFestivalRepository : IFestivalRepository
         _context = context;
     }
 
+    public async Task<Festival?> GetByIdAsync(int festivalId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Festivais
+            .FirstOrDefaultAsync(festival => festival.Id == festivalId, cancellationToken);
+    }
+
     public async Task<IReadOnlyList<Festival>> ListarAsync(CancellationToken cancellationToken = default)
     {
         return await _context.Festivais

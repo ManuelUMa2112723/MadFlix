@@ -3,6 +3,7 @@ using MadFlix.Factories;
 using MadFlix.Repositories;
 using MadFlix.Services;
 using MadFlix.Services.Auth;
+using MadFlix.Services.Carrinhos;
 using MadFlix.Services.Festivais;
 using MadFlix.Services.Filmes;
 using MadFlix.Services.Notifications;
@@ -41,6 +42,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IFilmeCompraRepository, EfFilmeCompraRepository>();
         services.AddScoped<IFilmeVisualizacaoRepository, EfFilmeVisualizacaoRepository>();
         services.AddScoped<IFestivalRepository, EfFestivalRepository>();
+        services.AddScoped<ICarrinhoRepository, EfCarrinhoRepository>();
 
         return services;
     }
@@ -69,6 +71,7 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IFestivalCatalogService, FestivalCatalogService>();
         services.AddScoped<IFestivalCreationService, FestivalCreationService>();
+        services.AddScoped<ICarrinhoService, CarrinhoService>();
 
         services.AddSingleton<IUserNotificationSubject, UserNotificationDispatcher>();
         services.AddScoped<IUserNotificationFeed, UserNotificationCenter>();

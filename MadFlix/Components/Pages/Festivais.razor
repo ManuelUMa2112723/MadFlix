@@ -1,8 +1,8 @@
 @page "/festivais"
 @rendermode InteractiveServer
-@using MadFlix.Factories
 @using MadFlix.Models.Acessos
-@inject IAcessoFactory AcessoFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ICarrinhoService CarrinhoService
 @inject IFestivalCatalogService FestivalCatalogService
 @inject IFestivalCreationService FestivalCreationService
 @inject NavigationManager NavigationManager
@@ -91,12 +91,23 @@
                                             </div>
                                         }
 
-                                        <div class="col-md-3 d-grid">
-                                            <button class="btn btn-success"
-                                                    @onclick="() => AdicionarAoCarrinho(festival)">
-                                                Adicionar ao carrinho
-                                            </button>
-                                        </div>
+                                        <AuthorizeView>
+                                            <Authorized>
+                                                <div class="col-md-3 d-grid">
+                                                    <button class="btn btn-success"
+                                                            @onclick="() => AdicionarAoCarrinho(festival)">
+                                                        Adicionar ao carrinho
+                                                    </button>
+                                                </div>
+                                            </Authorized>
+                                            <NotAuthorized>
+                                                <div class="col-md-3 d-grid">
+                                                    <a class="btn btn-outline-primary" href="@GetLoginUrl()">
+                                                        Iniciar sessao
+                                                    </a>
+                                                </div>
+                                            </NotAuthorized>
+                                        </AuthorizeView>
                                     </div>
                                 </div>
                             </div>
@@ -111,23 +122,6 @@
         </div>
     }
 
-    @if (carrinho.Count > 0)
-    {
-        <div class="mt-4">
-            <h3 class="h5">Carrinho</h3>
-            <ul class="list-group">
-                @foreach (var item in carrinho)
-                {
-                    <li class="list-group-item">
-                        <strong>@item.NomeFestival</strong> - @item.TipoDescricao
-                        <span class="text-muted">
-                            (@item.Inicio.ToString("dd/MM/yyyy HH:mm") - @item.Fim.ToString("dd/MM/yyyy HH:mm"))
-                        </span>
-                    </li>
-                }
-            </ul>
-        </div>
-    }
 </section>
 
 <section class="border rounded p-3">
@@ -202,7 +196,6 @@
 
     private readonly FestivalForm form = new();
     private readonly Dictionary<int, CompraFestivalForm> comprasPorFestival = new();
-    private readonly List<CarrinhoItem> carrinho = new();
     private List<Festival> festivais = new();
     private bool mostrarFormulario;
     private bool mostrarListaUtilizador;
@@ -281,43 +274,48 @@
             comprasPorFestival[festivalId].HorasAluguer = horas;
     }
 
-    private void AdicionarAoCarrinho(Festival festival)
+    private async Task AdicionarAoCarrinho(Festival festival)
     {
         try
         {
-            var compra = ObterCompraFestival(festival);
-            var compradoEm = DateTime.Now;
-            var pedido = new AcessoPedido
+            var utilizadorId = await ObterUtilizadorIdAutenticado();
+
+            if (utilizadorId is null)
             {
-                Tipo = compra.Tipo,
-                FestivalId = festival.Id,
-                DiaFestival = compra.DiaFestival,
-                InicioFestival = festival.DataInicio,
-                FimFestival = festival.DataFim,
-                HorasAluguer = compra.HorasAluguer,
-                Preco = ObterPreco(compra.Tipo),
-                CompradoEm = compradoEm
-            };
+                erro = "Tem de iniciar sessao para adicionar acessos ao carrinho.";
+                return;
+            }
 
-            if (compra.Tipo == TipoAcesso.AluguerDigital)
-                pedido.Decorators.Add(TipoAcessoDecorator.DuracaoAluguerDigital);
+            var compra = ObterCompraFestival(festival);
+            var resultado = await CarrinhoService.AdicionarAcessoFestivalAsync(
+                utilizadorId.Value,
+                festival.Id,
+                compra.Tipo,
+                compra.DiaFestival,
+                compra.HorasAluguer,
+                ObterPreco(compra.Tipo));
 
-            var acesso = AcessoFactory.Criar(pedido);
+            if (!resultado.Succeeded)
+            {
+                erro = resultado.ErrorMessage;
+                mensagemCarrinho = null;
+                return;
+            }
 
-            var janela = acesso.ObterJanelaAcesso();
-            carrinho.Add(new CarrinhoItem(
-                festival.Nome,
-                ObterDescricaoTipo(acesso.Tipo),
-                janela.Inicio,
-                janela.Fim));
-
-            mensagemCarrinho = $"{ObterDescricaoTipo(acesso.Tipo)} adicionado ao carrinho para {festival.Nome}.";
+            mensagemCarrinho = resultado.Value;
+            erro = null;
         }
         catch (ArgumentException ex)
         {
             mensagemCarrinho = null;
             erro = ex.Message;
         }
+    }
+
+    private async Task<int?> ObterUtilizadorIdAutenticado()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        return authState.User.GetMadFlixUserId();
     }
 
     private async Task CriarFestival()
@@ -373,12 +371,6 @@
         public DateTime DiaFestival { get; set; }
         public int HorasAluguer { get; set; } = HorasPadraoAluguerDigital;
     }
-
-    private sealed record CarrinhoItem(
-        string NomeFestival,
-        string TipoDescricao,
-        DateTime Inicio,
-        DateTime Fim);
 
     private sealed class FestivalForm
     {

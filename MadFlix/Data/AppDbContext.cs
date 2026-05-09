@@ -17,6 +17,8 @@ public class AppDbContext : DbContext
     public DbSet<Utilizador> Utilizadores { get; set; }
     public DbSet<FilmeCompra> FilmeCompras { get; set; }
     public DbSet<FilmeVisualizacao> FilmeVisualizacoes { get; set; }
+    public DbSet<Carrinho> Carrinhos { get; set; }
+    public DbSet<CarrinhoItem> CarrinhoItens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -78,5 +80,29 @@ public class AppDbContext : DbContext
             .HasOne(fv => fv.Filme)
             .WithMany(f => f.Visualizacoes)
             .HasForeignKey(fv => fv.FilmeId);
+
+        modelBuilder.Entity<Carrinho>()
+            .HasIndex(c => c.UtilizadorId)
+            .IsUnique();
+
+        modelBuilder.Entity<Carrinho>()
+            .HasOne(c => c.Utilizador)
+            .WithOne(u => u.Carrinho)
+            .HasForeignKey<Carrinho>(c => c.UtilizadorId);
+
+        modelBuilder.Entity<CarrinhoItem>()
+            .HasOne(ci => ci.Carrinho)
+            .WithMany(c => c.Itens)
+            .HasForeignKey(ci => ci.CarrinhoId);
+
+        modelBuilder.Entity<CarrinhoItem>()
+            .HasOne(ci => ci.Festival)
+            .WithMany(f => f.CarrinhoItens)
+            .HasForeignKey(ci => ci.FestivalId);
+
+        modelBuilder.Entity<CarrinhoItem>()
+            .HasOne(ci => ci.Filme)
+            .WithMany(f => f.CarrinhoItens)
+            .HasForeignKey(ci => ci.FilmeId);
     }
 }
