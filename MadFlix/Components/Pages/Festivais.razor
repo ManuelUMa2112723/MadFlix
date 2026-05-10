@@ -132,7 +132,8 @@
                                             @foreach (var filmeFestival in filmesFestival)
                                             {
                                                 <div class="col-md-6 col-xl-4">
-                                                    <div class="border rounded p-3 h-100">
+                                                    <div class="border rounded p-3 h-100 festival-movie-card"
+                                                         @onclick="() => AbrirDetalhesFilme(filmeFestival.Id)">
                                                         <strong>@filmeFestival.Titulo</strong>
                                                         <p class="text-muted mb-1">@filmeFestival.Genero</p>
                                                         <small>@filmeFestival.Ano</small>
@@ -260,6 +261,18 @@
         </NotAuthorized>
     </AuthorizeView>
 </section>
+
+<style>
+    .festival-movie-card {
+        cursor: pointer;
+        transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    .festival-movie-card:hover {
+        border-color: #9aa4b2 !important;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, .08);
+    }
+</style>
 
 @code {
     private const decimal PrecoPasseDiario = 9.99m;
@@ -470,6 +483,11 @@
 
         if (catalogosAbertos.Contains(filmeFestivalForm.FestivalId))
             await CarregarCatalogoFestival(filmeFestivalForm.FestivalId);
+    }
+
+    private void AbrirDetalhesFilme(int filmeId)
+    {
+        NavigationManager.NavigateTo($"/filmes/{filmeId}");
     }
 
     private static string ObterDescricaoTipo(TipoAcesso tipo)

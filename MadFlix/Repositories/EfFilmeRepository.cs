@@ -19,6 +19,16 @@ public sealed class EfFilmeRepository : IFilmeRepository
             .FirstOrDefaultAsync(filme => filme.Id == filmeId, cancellationToken);
     }
 
+    public async Task<Filme?> GetDetalhesByIdAsync(int filmeId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Filmes
+            .Include(filme => filme.Diretor)
+            .Include(filme => filme.Festival)
+            .Include(filme => filme.FilmeAtores)
+                .ThenInclude(filmeAtor => filmeAtor.Ator)
+            .FirstOrDefaultAsync(filme => filme.Id == filmeId, cancellationToken);
+    }
+
     public async Task<Filme?> GetByTituloAsync(string titulo, CancellationToken cancellationToken = default)
     {
         return await _context.Filmes

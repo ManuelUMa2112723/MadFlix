@@ -61,11 +61,11 @@
     <section class="movie-result">
         @if (!string.IsNullOrEmpty(filme.Poster))
         {
-            <img src="@filme.Poster" alt="@filme.Titulo" />
+            <img class="clickable-movie" src="@filme.Poster" alt="@filme.Titulo" @onclick="() => AbrirDetalhesFilme(filme.Id)" />
         }
 
         <div>
-            <h2>@filme.Titulo (@filme.Ano)</h2>
+            <h2 class="clickable-movie" @onclick="() => AbrirDetalhesFilme(filme.Id)">@filme.Titulo (@filme.Ano)</h2>
             <p><strong>Genero:</strong> @filme.Genero</p>
             <p><strong>Sinopse:</strong> @filme.Sinopse</p>
             <p><strong>Avaliacao IMDb:</strong> @filme.ImdbRating</p>
@@ -131,7 +131,7 @@
         <div class="movie-grid">
             @foreach (var recomendado in filmesRecomendados)
             {
-                <article class="movie-card">
+                <article class="movie-card clickable-movie" @onclick="() => AbrirDetalhesFilme(recomendado.Id)">
                     @if (!string.IsNullOrWhiteSpace(recomendado.Poster) && recomendado.Poster != "N/A")
                     {
                         <img src="@recomendado.Poster" alt="@recomendado.Titulo" />
@@ -147,6 +147,7 @@
                         <small>Sessao: 15:30 - 20:30</small>
                         <button class="btn btn-sm btn-success"
                                 type="button"
+                                @onclick:stopPropagation="true"
                                 @onclick="() => AdicionarBilheteSessaoAoCarrinhoAsync(recomendado)"
                                 disabled="@(!utilizadorAutenticado)">
                             Adicionar bilhete sessao
@@ -234,6 +235,17 @@
         border-radius: .5rem;
         overflow: hidden;
         background: #fff;
+        transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+    }
+
+    .movie-card.clickable-movie:hover {
+        border-color: #ffffff;
+        box-shadow: 0 14px 28px rgba(15, 23, 42, .24);
+        transform: translateY(-4px);
+    }
+
+    .clickable-movie {
+        cursor: pointer;
     }
 
     .movie-card img,
@@ -444,6 +456,11 @@
 
         erroAcao = null;
         mensagemAcao = resultado.Value;
+    }
+
+    private void AbrirDetalhesFilme(int filmeId)
+    {
+        NavigationManager.NavigateTo($"/filmes/{filmeId}");
     }
 
     private async Task AdicionarBilheteSessaoAoCarrinhoAsync(Filme filmeSelecionado)

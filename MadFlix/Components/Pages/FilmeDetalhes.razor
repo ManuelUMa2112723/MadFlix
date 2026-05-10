@@ -1,0 +1,277 @@
+@page "/filmes/{FilmeId:int}"
+@rendermode InteractiveServer
+@inject IFilmeCatalogService FilmeCatalogService
+@inject NavigationManager NavigationManager
+
+<PageTitle>@(filme?.Titulo ?? "Filme")</PageTitle>
+
+@if (carregando)
+{
+    <p>A carregar filme...</p>
+}
+else if (!string.IsNullOrWhiteSpace(erro))
+{
+    <div class="alert alert-danger">@erro</div>
+    <button class="btn btn-outline-secondary" type="button" @onclick="Voltar">
+        Voltar
+    </button>
+}
+else if (filme is not null)
+{
+    <article class="movie-detail">
+        <div class="movie-poster-panel">
+            @if (!string.IsNullOrWhiteSpace(filme.Poster) && filme.Poster != "N/A")
+            {
+                <img src="@filme.Poster" alt="@filme.Titulo" />
+            }
+            else
+            {
+                <div class="movie-poster-placeholder">@filme.Titulo</div>
+            }
+        </div>
+
+        <section class="movie-info">
+            <button class="btn btn-link px-0" type="button" @onclick="Voltar">
+                Voltar
+            </button>
+
+            <h1>@filme.Titulo</h1>
+
+            <div class="movie-meta">
+                @if (filme.Ano > 0)
+                {
+                    <span>@filme.Ano</span>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(filme.Runtime))
+                {
+                    <span>@filme.Runtime</span>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(filme.Rated))
+                {
+                    <span>@filme.Rated</span>
+                }
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(filme.Sinopse))
+            {
+                <p class="movie-overview">@filme.Sinopse</p>
+            }
+
+            <dl class="movie-facts">
+                @if (!string.IsNullOrWhiteSpace(filme.Genero))
+                {
+                    <div>
+                        <dt>Genero</dt>
+                        <dd>@filme.Genero</dd>
+                    </div>
+                }
+
+                @if (filme.ImdbRating.HasValue)
+                {
+                    <div>
+                        <dt>Avaliacao</dt>
+                        <dd>@filme.ImdbRating.Value.ToString("0.0")</dd>
+                    </div>
+                }
+
+                @if (filme.Diretor is not null)
+                {
+                    <div>
+                        <dt>Diretor</dt>
+                        <dd>@filme.Diretor.Nome</dd>
+                    </div>
+                }
+
+                @if (filme.Festival is not null)
+                {
+                    <div>
+                        <dt>Festival</dt>
+                        <dd>@filme.Festival.Nome</dd>
+                    </div>
+                }
+            </dl>
+
+            @if (atores.Count > 0)
+            {
+                <section class="movie-cast">
+                    <h2>Elenco</h2>
+                    <div class="cast-list">
+                        @foreach (var filmeAtor in atores)
+                        {
+                            <span>
+                                @filmeAtor.Ator.Nome
+                                @if (!string.IsNullOrWhiteSpace(filmeAtor.Papel))
+                                {
+                                    <small>@filmeAtor.Papel</small>
+                                }
+                            </span>
+                        }
+                    </div>
+                </section>
+            }
+        </section>
+    </article>
+}
+
+<style>
+    .movie-detail {
+        display: grid;
+        gap: 2rem;
+        grid-template-columns: minmax(220px, 360px) minmax(0, 1fr);
+        margin: 1rem auto;
+        max-width: 1120px;
+    }
+
+    .movie-poster-panel img,
+    .movie-poster-placeholder {
+        aspect-ratio: 2 / 3;
+        border-radius: .5rem;
+        box-shadow: 0 18px 45px rgba(15, 23, 42, .22);
+        width: 100%;
+    }
+
+    .movie-poster-panel img {
+        object-fit: cover;
+    }
+
+    .movie-poster-placeholder {
+        align-items: center;
+        background: #78000f;
+        color: #fff;
+        display: flex;
+        font-size: 1.4rem;
+        font-weight: 700;
+        justify-content: center;
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .movie-info h1 {
+        font-size: 2.4rem;
+        margin: .25rem 0 .75rem;
+    }
+
+    .movie-meta {
+        color: #e9eef7;
+        display: flex;
+        flex-wrap: wrap;
+        font-weight: 700;
+        gap: .5rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .movie-meta span:not(:last-child)::after {
+        content: "•";
+        color: rgba(255, 255, 255, .75);
+        margin-left: .5rem;
+    }
+
+    .movie-overview {
+        font-size: 1.05rem;
+        line-height: 1.65;
+        max-width: 760px;
+    }
+
+    .movie-facts {
+        display: grid;
+        gap: .9rem;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        margin: 1.5rem 0;
+    }
+
+    .movie-facts div {
+        border-top: 1px solid rgba(255, 255, 255, .7);
+        padding-top: .75rem;
+    }
+
+    .movie-facts dt {
+        color: #dbeafe;
+        font-size: .85rem;
+        font-weight: 600;
+        margin-bottom: .2rem;
+    }
+
+    .movie-facts dd {
+        color: #ffffff;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .movie-cast h2 {
+        font-size: 1.35rem;
+        margin-bottom: .75rem;
+    }
+
+    .cast-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .55rem;
+    }
+
+    .cast-list span {
+        background: #ffffff;
+        border-radius: 999px;
+        color: #7f0011;
+        display: inline-flex;
+        gap: .35rem;
+        font-weight: 700;
+        padding: .45rem .75rem;
+    }
+
+    .cast-list small {
+        color: #475467;
+    }
+
+    @@media (max-width: 768px) {
+        .movie-detail {
+            grid-template-columns: 1fr;
+        }
+
+        .movie-poster-panel {
+            max-width: 260px;
+        }
+
+        .movie-info h1 {
+            font-size: 1.8rem;
+        }
+    }
+</style>
+
+@code {
+    [Parameter]
+    public int FilmeId { get; set; }
+
+    private Filme? filme;
+    private List<FilmeAtor> atores = new();
+    private bool carregando = true;
+    private string? erro;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        carregando = true;
+        erro = null;
+
+        var resultado = await FilmeCatalogService.ObterDetalhesAsync(FilmeId);
+
+        if (!resultado.Succeeded || resultado.Value is null)
+        {
+            erro = resultado.ErrorMessage;
+            carregando = false;
+            return;
+        }
+
+        filme = resultado.Value;
+        atores = filme.FilmeAtores
+            .Where(filmeAtor => filmeAtor.Ator is not null)
+            .OrderBy(filmeAtor => filmeAtor.Ator.Nome)
+            .ToList();
+        carregando = false;
+    }
+
+    private void Voltar()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+}
