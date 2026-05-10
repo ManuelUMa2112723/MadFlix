@@ -1,6 +1,8 @@
 @implements IDisposable
 @rendermode InteractiveServer
 @using MadFlix.Models.Acessos
+@using MadFlix.Models.Pagamentos.StatesPagamento
+@using MadFlix.Models.Pagamentos.StrategiesPagamento
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ICarrinhoService CarrinhoService
 
@@ -69,11 +71,61 @@
                     </div>
                 }
 
+                @if (mostrarPagamento)
+                {
+                    <section class="payment-panel" aria-label="Pagamento">
+                        <h3>Metodo de pagamento</h3>
+                        <div class="payment-methods">
+                            @foreach (var metodo in metodosPagamento)
+                            {
+                                <button class="@ObterClasseMetodoPagamento(metodo)"
+                                        type="button"
+                                        disabled="@pagamentoEmCurso"
+                                        @onclick="() => SelecionarMetodoPagamento(metodo)">
+                                    <strong>@metodo.Nome</strong>
+                                    <span>@metodo.Descricao</span>
+                                </button>
+                            }
+                        </div>
+
+                        @if (metodoSelecionado is not null)
+                        {
+                            <div class="payment-selection">
+                                <strong>@metodoSelecionado.Nome</strong>
+                                <span>@metodoSelecionado.Descricao</span>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(mensagemPagamento))
+                        {
+                            <div class="payment-status">@mensagemPagamento</div>
+                        }
+
+                        <div class="payment-actions">
+                            <button class="btn btn-outline-secondary"
+                                    type="button"
+                                    disabled="@pagamentoEmCurso"
+                                    @onclick="CancelarPagamento">
+                                Cancelar
+                            </button>
+                            <button class="btn btn-success"
+                                    type="button"
+                                    disabled="@(metodoSelecionado is null || pagamentoEmCurso || pagamentoConcluido)"
+                                    @onclick="ConfirmarPagamento">
+                                Confirmar pagamento
+                            </button>
+                        </div>
+                    </section>
+                }
+
                 <div class="cart-footer">
                     <button class="btn btn-outline-secondary" type="button" @onclick="FecharCarrinho">
                         Voltar atras
                     </button>
-                    <button class="btn btn-primary" type="button" disabled="@(itens.Count == 0)">
+                    <button class="btn btn-primary"
+                            type="button"
+                            disabled="@(itens.Count == 0 || pagamentoEmCurso || pagamentoConcluido)"
+                            @onclick="MostrarPagamento">
                         Finalizar pagamento
                     </button>
                 </div>
@@ -83,9 +135,15 @@
 </AuthorizeView>
 
 @code {
+    private readonly IReadOnlyList<IPagamentoStrategy> metodosPagamento = PagamentoStrategyFactory.CriarMetodos();
     private List<CarrinhoItem> itens = new();
     private bool aberto;
     private bool aCarregar;
+    private bool mostrarPagamento;
+    private bool pagamentoEmCurso;
+    private bool pagamentoConcluido;
+    private IPagamentoStrategy? metodoSelecionado;
+    private string? mensagemPagamento;
     private string? mensagem;
     private string? erro;
 
@@ -100,12 +158,14 @@
         aberto = true;
         mensagem = null;
         erro = null;
+        ReiniciarPagamento();
         await CarregarCarrinho();
     }
 
     private void FecharCarrinho()
     {
         aberto = false;
+        ReiniciarPagamento();
     }
 
     private async Task CarregarCarrinho()
@@ -144,7 +204,80 @@
 
         mensagem = resultado.Value;
         erro = null;
+        ReiniciarPagamento();
         await CarregarCarrinho();
+    }
+
+    private void MostrarPagamento()
+    {
+        mostrarPagamento = true;
+        mensagem = null;
+        erro = null;
+    }
+
+    private void SelecionarMetodoPagamento(IPagamentoStrategy metodo)
+    {
+        metodoSelecionado = metodo;
+        mensagemPagamento = metodo.Descricao;
+    }
+
+    private void CancelarPagamento()
+    {
+        ReiniciarPagamento();
+    }
+
+    private async Task ConfirmarPagamento()
+    {
+        if (metodoSelecionado is null)
+        {
+            erro = "Escolha um metodo de pagamento.";
+            return;
+        }
+
+        pagamentoEmCurso = true;
+        erro = null;
+        mensagem = null;
+
+        var pagamentoContext = new PagamentoContext();
+        pagamentoContext.SetStrategy(metodoSelecionado);
+        mensagemPagamento = pagamentoContext.ExecutarPagamento(ObterTotalCarrinho());
+        StateHasChanged();
+        await Task.Delay(700);
+
+        var stateContext = new PagamentoStateContext();
+
+        while (!stateContext.Concluido)
+        {
+            mensagemPagamento = stateContext.MensagemEstado;
+            StateHasChanged();
+            await stateContext.Request();
+        }
+
+        mensagemPagamento = stateContext.MensagemEstado;
+        mensagem = "Compra concluida com sucesso.";
+        pagamentoConcluido = true;
+        pagamentoEmCurso = false;
+    }
+
+    private void ReiniciarPagamento()
+    {
+        mostrarPagamento = false;
+        pagamentoEmCurso = false;
+        pagamentoConcluido = false;
+        metodoSelecionado = null;
+        mensagemPagamento = null;
+    }
+
+    private decimal ObterTotalCarrinho()
+    {
+        return itens.Sum(item => item.Preco);
+    }
+
+    private string ObterClasseMetodoPagamento(IPagamentoStrategy metodo)
+    {
+        return metodoSelecionado?.Nome == metodo.Nome
+            ? "payment-method selected"
+            : "payment-method";
     }
 
     private async Task<int?> ObterUtilizadorIdAutenticado()

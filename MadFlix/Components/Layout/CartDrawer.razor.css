@@ -43,6 +43,7 @@
     gap: 1rem;
     height: 100vh;
     max-width: 100%;
+    overflow-y: auto;
     padding: 1.25rem;
     position: fixed;
     right: 0;
@@ -75,10 +76,8 @@
 
 .cart-items {
     display: flex;
-    flex: 1;
     flex-direction: column;
     gap: 0.75rem;
-    overflow-y: auto;
 }
 
 .cart-item {
@@ -107,4 +106,68 @@
     gap: 0.75rem;
     justify-content: flex-end;
     padding-top: 1rem;
+}
+
+.payment-panel {
+    border: 1px solid #e4e7ec;
+    border-radius: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.85rem;
+}
+
+.payment-panel h3 {
+    font-size: 1rem;
+    margin: 0;
+}
+
+.payment-methods {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.payment-method {
+    background: #ffffff;
+    border: 1px solid #d0d5dd;
+    border-radius: 0.45rem;
+    color: #101828;
+    padding: 0.65rem;
+    text-align: left;
+}
+
+.payment-method.selected {
+    border-color: #198754;
+    box-shadow: 0 0 0 2px rgba(25, 135, 84, 0.15);
+}
+
+.payment-method strong,
+.payment-method span,
+.payment-selection strong,
+.payment-selection span {
+    display: block;
+}
+
+.payment-method span,
+.payment-selection span {
+    color: #667085;
+    font-size: 0.85rem;
+}
+
+.payment-selection,
+.payment-status {
+    background: #f8fafc;
+    border-radius: 0.45rem;
+    padding: 0.65rem;
+}
+
+.payment-status {
+    color: #198754;
+    font-weight: 600;
+}
+
+.payment-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
 }
