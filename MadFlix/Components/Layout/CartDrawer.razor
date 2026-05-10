@@ -118,17 +118,20 @@
                     </section>
                 }
 
-                <div class="cart-footer">
-                    <button class="btn btn-outline-secondary" type="button" @onclick="FecharCarrinho">
-                        Voltar atras
-                    </button>
-                    <button class="btn btn-primary"
-                            type="button"
-                            disabled="@(itens.Count == 0 || pagamentoEmCurso || pagamentoConcluido)"
-                            @onclick="MostrarPagamento">
-                        Finalizar pagamento
-                    </button>
-                </div>
+                @if (!mostrarPagamento)
+                {
+                    <div class="cart-footer">
+                        <button class="btn btn-outline-secondary" type="button" @onclick="FecharCarrinho">
+                            Voltar atras
+                        </button>
+                        <button class="btn btn-primary"
+                                type="button"
+                                disabled="@(itens.Count == 0)"
+                                @onclick="MostrarPagamento">
+                            Finalizar pagamento
+                        </button>
+                    </div>
+                }
             </aside>
         }
     </Authorized>

@@ -16,8 +16,8 @@
     <h2 class="h4">Area do utilizador</h2>
     <p class="text-muted mb-3">Visualizacao simples dos festivais disponiveis.</p>
 
-    <button class="btn btn-outline-primary" @onclick="MostrarFestivaisDisponiveis">
-        Ver festivais disponiveis
+    <button class="btn btn-light festival-user-button" @onclick="AlternarFestivaisDisponiveis">
+        @(mostrarListaUtilizador ? "Esconder festivais disponiveis" : "Ver festivais disponiveis")
     </button>
 
     @if (!string.IsNullOrWhiteSpace(mensagemCarrinho))
@@ -167,8 +167,8 @@
 
     <AuthorizeView>
         <Authorized>
-            <button class="btn btn-primary mb-4" @onclick="MostrarFormulario">
-                Adicionar festival
+            <button class="btn btn-primary mb-4" @onclick="AlternarFormulario">
+                @(mostrarFormulario ? "Cancelar adicao de festival" : "Adicionar festival")
             </button>
 
             @if (mostrarFormulario)
@@ -272,6 +272,18 @@
         border-color: #9aa4b2 !important;
         box-shadow: 0 8px 20px rgba(15, 23, 42, .08);
     }
+
+    .festival-user-button {
+        color: #9f0f1a;
+        border: 1px solid #ffffff;
+    }
+
+    .festival-user-button:hover,
+    .festival-user-button:focus {
+        color: #78000f;
+        background: #f8f9fa;
+        border-color: #ffffff;
+    }
 </style>
 
 @code {
@@ -299,11 +311,14 @@
         await CarregarFestivais();
     }
 
-    private void MostrarFormulario()
+    private void AlternarFormulario()
     {
-        mostrarFormulario = true;
+        mostrarFormulario = !mostrarFormulario;
         mensagem = null;
         erro = null;
+
+        if (!mostrarFormulario)
+            form.Limpar();
     }
 
     private void EsconderFormulario()
@@ -311,9 +326,17 @@
         mostrarFormulario = false;
     }
 
-    private async Task MostrarFestivaisDisponiveis()
+    private async Task AlternarFestivaisDisponiveis()
     {
-        mostrarListaUtilizador = true;
+        mostrarListaUtilizador = !mostrarListaUtilizador;
+
+        if (!mostrarListaUtilizador)
+        {
+            catalogosAbertos.Clear();
+            catalogosACarregar.Clear();
+            return;
+        }
+
         await CarregarFestivais();
     }
 
@@ -338,6 +361,7 @@
         if (!catalogosAbertos.Add(festivalId))
         {
             catalogosAbertos.Remove(festivalId);
+            catalogosACarregar.Remove(festivalId);
             return;
         }
 
