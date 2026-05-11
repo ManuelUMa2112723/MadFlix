@@ -56,8 +56,23 @@ public class FilmeService
         var creditsResposta = await _httpClient.GetStringAsync(creditsUrl);
         var credits = JsonSerializer.Deserialize<TmdbCredits>(creditsResposta, _jsonOptions);
 
+        // 4.5 — Obtener trailer
+        string? trailerUrl = null;
+        var videosUrl = $"{BaseUrl}/movie/{tmdbId}/videos?api_key={ApiKey}&language=en-US";
+        var videosResposta = await _httpClient.GetStringAsync(videosUrl);
+        var videos = JsonSerializer.Deserialize<TmdbVideoResult>(videosResposta, _jsonOptions);
+
+        if (videos != null)
+        {
+            var trailer = videos.Results
+                .FirstOrDefault(v => v.Type == "Trailer" && v.Site == "YouTube");
+
+            if (trailer != null)
+                trailerUrl = $"https://www.youtube.com/watch?v={trailer.Key}";
+        }
+
         // 5 — Convertir con el Adapter
-        var novoFilme = TmdbFilmeAdapter.ToFilme(tmdbFilme);
+        var novoFilme = TmdbFilmeAdapter.ToFilme(tmdbFilme, trailerUrl);
 
         // 6 — Guardar Director
         if (credits != null)

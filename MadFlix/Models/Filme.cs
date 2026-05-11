@@ -16,6 +16,7 @@ public class Filme
     public string? Rated { get; set; }
 
     public int? DiretorId { get; set; }
+    public string? TrailerUrl { get; set; }
     public Diretor? Diretor { get; set; }
 
     public int? FestivalId { get; set; }

@@ -7,7 +7,7 @@ public static class TmdbFilmeAdapter
 {
     private const string PosterBaseUrl = "https://image.tmdb.org/t/p/w500";
 
-    public static Filme ToFilme(TmdbFilme tmdb)
+    public static Filme ToFilme(TmdbFilme tmdb, string? trailerUrl = null)
     {
         return new Filme
         {
@@ -22,7 +22,8 @@ public static class TmdbFilmeAdapter
             ImdbId = tmdb.ImdbId,
             ImdbRating = tmdb.ImdbRating,
             Runtime = tmdb.Runtime > 0 ? $"{tmdb.Runtime} min" : null,
-            Rated = tmdb.Adult ? "Adult" : "All audiences"
+            Rated = tmdb.Adult ? "Adult" : "All audiences",
+            TrailerUrl = trailerUrl
         };
     }
 

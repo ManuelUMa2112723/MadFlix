@@ -130,3 +130,21 @@ public class TmdbFilmeResumo
     [JsonPropertyName("popularity")]
     public float Popularity { get; set; }
 }
+
+public class TmdbVideoResult
+{
+    [JsonPropertyName("results")]
+    public List<TmdbVideo> Results { get; set; } = new();
+}
+
+public class TmdbVideo
+{
+    [JsonPropertyName("key")]
+    public string Key { get; set; } = string.Empty;
+
+    [JsonPropertyName("site")]
+    public string Site { get; set; } = string.Empty;
+
+    [JsonPropertyName("type")]
+    public string Type { get; set; } = string.Empty;
+}
