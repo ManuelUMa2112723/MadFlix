@@ -108,6 +108,37 @@ namespace MadFlix.Migrations
                     b.ToTable("CarrinhoItens");
                 });
 
+            modelBuilder.Entity("MadFlix.Models.ComentarioFilme", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CriadoEmUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Estrelas")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("FilmeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Texto")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("UtilizadorId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FilmeId");
+
+                    b.HasIndex("UtilizadorId");
+
+                    b.ToTable("ComentariosFilmes");
+                });
+
             modelBuilder.Entity("MadFlix.Models.Diretor", b =>
                 {
                     b.Property<int>("Id")
@@ -354,6 +385,25 @@ namespace MadFlix.Migrations
                     b.Navigation("Filme");
                 });
 
+            modelBuilder.Entity("MadFlix.Models.ComentarioFilme", b =>
+                {
+                    b.HasOne("MadFlix.Models.Filme", "Filme")
+                        .WithMany("Comentarios")
+                        .HasForeignKey("FilmeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MadFlix.Models.Utilizador", "Utilizador")
+                        .WithMany("ComentariosFilmes")
+                        .HasForeignKey("UtilizadorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Filme");
+
+                    b.Navigation("Utilizador");
+                });
+
             modelBuilder.Entity("MadFlix.Models.Filme", b =>
                 {
                     b.HasOne("MadFlix.Models.Diretor", "Diretor")
@@ -452,6 +502,8 @@ namespace MadFlix.Migrations
                 {
                     b.Navigation("CarrinhoItens");
 
+                    b.Navigation("Comentarios");
+
                     b.Navigation("Compras");
 
                     b.Navigation("FilmeAtores");
@@ -462,6 +514,8 @@ namespace MadFlix.Migrations
             modelBuilder.Entity("MadFlix.Models.Utilizador", b =>
                 {
                     b.Navigation("Carrinho");
+
+                    b.Navigation("ComentariosFilmes");
 
                     b.Navigation("Compras");
 

@@ -47,6 +47,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IFilmeVisualizacaoRepository, EfFilmeVisualizacaoRepository>();
         services.AddScoped<IFestivalRepository, EfFestivalRepository>();
         services.AddScoped<ICarrinhoRepository, EfCarrinhoRepository>();
+        services.AddScoped<IComentarioFilmeRepository, EfComentarioFilmeRepository>();
 
         return services;
     }
@@ -72,6 +73,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IFilmeCatalogService, FilmeCatalogService>();
         services.AddScoped<IFilmePurchaseService, FilmePurchaseService>();
         services.AddScoped<IFilmePlaybackService, FilmePlaybackService>();
+        services.AddScoped<IComentarioFilmeService, ComentarioFilmeService>();
 
         services.AddScoped<IFestivalCatalogService, FestivalCatalogService>();
         services.AddScoped<IFestivalCreationService, FestivalCreationService>();

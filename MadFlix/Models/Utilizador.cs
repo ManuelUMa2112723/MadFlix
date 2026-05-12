@@ -12,5 +12,6 @@ public class Utilizador
 
     public ICollection<FilmeCompra> Compras { get; set; } = new List<FilmeCompra>();
     public ICollection<FilmeVisualizacao> Visualizacoes { get; set; } = new List<FilmeVisualizacao>();
+    public ICollection<ComentarioFilme> ComentariosFilmes { get; set; } = new List<ComentarioFilme>();
     public Carrinho? Carrinho { get; set; }
 }

@@ -2,6 +2,8 @@
 @rendermode InteractiveServer
 @using Microsoft.AspNetCore.Components
 @inject IFilmeCatalogService FilmeCatalogService
+@inject IComentarioFilmeService ComentarioFilmeService
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 
 <PageTitle>@(filme?.Titulo ?? "Filme")</PageTitle>
@@ -133,6 +135,78 @@ else if (filme is not null)
                     </div>
                 </section>
             }
+
+            <section class="movie-comments">
+                <h2>Comentarios</h2>
+
+                @if (!string.IsNullOrWhiteSpace(mensagemComentario))
+                {
+                    <div class="alert alert-success">@mensagemComentario</div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(erroComentario))
+                {
+                    <div class="alert alert-danger">@erroComentario</div>
+                }
+
+                <AuthorizeView>
+                    <Authorized>
+                        <div class="comment-form">
+                            <div class="star-picker" aria-label="Avaliacao">
+                                @for (var estrela = 1; estrela <= 5; estrela++)
+                                {
+                                    var valorEstrela = estrela;
+                                    <button class="star-button"
+                                            type="button"
+                                            title="@($"{valorEstrela} estrelas")"
+                                            @onclick="() => comentarioForm.Estrelas = valorEstrela">
+                                        @(valorEstrela <= comentarioForm.Estrelas ? "★" : "☆")
+                                    </button>
+                                }
+                            </div>
+
+                            <textarea class="form-control"
+                                      rows="3"
+                                      maxlength="600"
+                                      @bind="comentarioForm.Texto"
+                                      placeholder="Escreve a tua opiniao sobre o filme"></textarea>
+
+                            <button class="btn btn-light" type="button" @onclick="AdicionarComentario">
+                                Publicar comentario
+                            </button>
+                        </div>
+                    </Authorized>
+                    <NotAuthorized>
+                        <p>Inicie sessao para comentar e avaliar este filme.</p>
+                    </NotAuthorized>
+                </AuthorizeView>
+
+                @if (comentarios.Count == 0)
+                {
+                    <p>Ainda nao existem comentarios para este filme.</p>
+                }
+                else
+                {
+                    <div class="comment-list">
+                        @foreach (var comentario in comentarios)
+                        {
+                            <article class="comment-item">
+                                <div>
+                                    <strong>@(comentario.Utilizador?.NomeUtilizador ?? "Utilizador")</strong>
+                                    <span>@ObterEstrelas(comentario.Estrelas)</span>
+                                    <small>@comentario.CriadoEmUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
+                                </div>
+                                <p>@comentario.Texto</p>
+                                <button class="btn btn-sm btn-danger"
+                                        type="button"
+                                        @onclick="() => RemoverComentario(comentario.Id)">
+                                    Remover
+                                </button>
+                            </article>
+                        }
+                    </div>
+                }
+            </section>
         </section>
     </article>
 }
@@ -263,6 +337,71 @@ else if (filme is not null)
         color: #475467;
     }
 
+    .movie-comments {
+        margin-top: 2rem;
+        max-width: 760px;
+    }
+
+    .movie-comments h2 {
+        font-size: 1.35rem;
+        margin-bottom: .75rem;
+    }
+
+    .comment-form,
+    .comment-list {
+        display: grid;
+        gap: .75rem;
+    }
+
+    .comment-form {
+        background: rgba(255, 255, 255, .08);
+        border: 1px solid rgba(255, 255, 255, .35);
+        border-radius: .5rem;
+        margin-bottom: 1rem;
+        padding: .85rem;
+    }
+
+    .star-picker {
+        display: flex;
+        gap: .25rem;
+    }
+
+    .star-button {
+        background: transparent;
+        border: 0;
+        color: #ffe066;
+        font-size: 1.7rem;
+        line-height: 1;
+        padding: 0;
+    }
+
+    .comment-item {
+        background: #ffffff;
+        border-radius: .5rem;
+        color: #7f0011;
+        padding: .85rem;
+    }
+
+    .comment-item div {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: .65rem;
+    }
+
+    .comment-item span {
+        color: #f59f00;
+    }
+
+    .comment-item small {
+        color: #667085;
+    }
+
+    .comment-item p {
+        color: #101828;
+        margin: .65rem 0;
+    }
+
     @@media (max-width: 768px) {
         .movie-detail {
             grid-template-columns: 1fr;
@@ -284,9 +423,13 @@ else if (filme is not null)
 
     private Filme? filme;
     private List<FilmeAtor> atores = new();
+    private List<ComentarioFilme> comentarios = new();
+    private readonly ComentarioForm comentarioForm = new();
     private string? trailerEmbedUrl;
     private bool carregando = true;
     private string? erro;
+    private string? mensagemComentario;
+    private string? erroComentario;
 
     private bool TemTrailer => !string.IsNullOrWhiteSpace(filme?.TrailerUrl);
 
@@ -310,7 +453,66 @@ else if (filme is not null)
             .Where(filmeAtor => filmeAtor.Ator is not null)
             .OrderBy(filmeAtor => filmeAtor.Ator.Nome)
             .ToList();
+        await CarregarComentarios();
         carregando = false;
+    }
+
+    private async Task CarregarComentarios()
+    {
+        comentarios = (await ComentarioFilmeService.ListarPorFilmeAsync(FilmeId)).ToList();
+    }
+
+    private async Task AdicionarComentario()
+    {
+        mensagemComentario = null;
+        erroComentario = null;
+
+        var utilizadorId = await ObterUtilizadorIdAutenticado();
+
+        if (utilizadorId is null)
+        {
+            erroComentario = "Tem de iniciar sessao para comentar.";
+            return;
+        }
+
+        var resultado = await ComentarioFilmeService.AdicionarAsync(
+            FilmeId,
+            utilizadorId.Value,
+            comentarioForm.Estrelas,
+            comentarioForm.Texto);
+
+        if (!resultado.Succeeded)
+        {
+            erroComentario = resultado.ErrorMessage;
+            return;
+        }
+
+        mensagemComentario = resultado.Value;
+        comentarioForm.Limpar();
+        await CarregarComentarios();
+    }
+
+    private async Task RemoverComentario(int comentarioId)
+    {
+        mensagemComentario = null;
+        erroComentario = null;
+
+        var resultado = await ComentarioFilmeService.RemoverAsync(comentarioId);
+
+        if (!resultado.Succeeded)
+        {
+            erroComentario = resultado.ErrorMessage;
+            return;
+        }
+
+        mensagemComentario = resultado.Value;
+        await CarregarComentarios();
+    }
+
+    private async Task<int?> ObterUtilizadorIdAutenticado()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        return authState.User.GetMadFlixUserId();
     }
 
     private void Voltar()
@@ -346,5 +548,23 @@ else if (filme is not null)
         }
 
         return null;
+    }
+
+    private static string ObterEstrelas(int estrelas)
+    {
+        var valor = Math.Clamp(estrelas, 1, 5);
+        return new string('★', valor) + new string('☆', 5 - valor);
+    }
+
+    private sealed class ComentarioForm
+    {
+        public int Estrelas { get; set; } = 5;
+        public string Texto { get; set; } = string.Empty;
+
+        public void Limpar()
+        {
+            Estrelas = 5;
+            Texto = string.Empty;
+        }
     }
 }
