@@ -421,6 +421,9 @@ else if (filme is not null)
     [Parameter]
     public int FilmeId { get; set; }
 
+    [SupplyParameterFromQuery(Name = "returnUrl")]
+    public string? ReturnUrl { get; set; }
+
     private Filme? filme;
     private List<FilmeAtor> atores = new();
     private List<ComentarioFilme> comentarios = new();
@@ -517,7 +520,7 @@ else if (filme is not null)
 
     private void Voltar()
     {
-        NavigationManager.NavigateTo("/");
+        NavigationManager.NavigateTo(NavigationHelpers.NormalizeReturnUrl(ReturnUrl));
     }
 
     private static string? ObterYoutubeEmbedUrl(string? trailerUrl)

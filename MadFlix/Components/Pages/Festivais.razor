@@ -511,7 +511,8 @@
 
     private void AbrirDetalhesFilme(int filmeId)
     {
-        NavigationManager.NavigateTo($"/filmes/{filmeId}");
+        var returnUrl = Uri.EscapeDataString(NavigationManager.ToLocalPath());
+        NavigationManager.NavigateTo($"/filmes/{filmeId}?returnUrl={returnUrl}");
     }
 
     private static string ObterDescricaoTipo(TipoAcesso tipo)
