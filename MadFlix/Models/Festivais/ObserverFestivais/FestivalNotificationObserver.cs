@@ -13,6 +13,18 @@ public sealed class FestivalNotificationObserver : IFestivalObserver
     }
 
     public async Task Update(
+        FestivalCriadoEvent evento,
+        CancellationToken cancellationToken = default)
+    {
+        await _notificationSubject.NotifyAllAsync(new UserNotification
+        {
+            Titulo = "Novo festival disponivel",
+            Mensagem = $"{evento.FestivalNome} ja esta disponivel em MadFlix.",
+            Tipo = "festival"
+        }, cancellationToken);
+    }
+
+    public async Task Update(
         FestivalFilmeAdicionadoEvent evento,
         CancellationToken cancellationToken = default)
     {

@@ -27,6 +27,24 @@ public sealed class FestivalSubject : IFestivalSubject
     }
 
     public async Task Notify(
+        FestivalCriadoEvent evento,
+        CancellationToken cancellationToken = default)
+    {
+        List<IFestivalObserver> observers;
+
+        lock (_lock)
+        {
+            observers = _observers.ToList();
+        }
+
+        foreach (var observer in observers)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            await observer.Update(evento, cancellationToken);
+        }
+    }
+
+    public async Task Notify(
         FestivalFilmeAdicionadoEvent evento,
         CancellationToken cancellationToken = default)
     {
