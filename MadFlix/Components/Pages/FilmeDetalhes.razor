@@ -1,5 +1,6 @@
 @page "/filmes/{FilmeId:int}"
 @rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components
 @inject IFilmeCatalogService FilmeCatalogService
 @inject NavigationManager NavigationManager
 
@@ -27,36 +28,6 @@ else if (filme is not null)
             else
             {
                 <div class="movie-poster-placeholder">@filme.Titulo</div>
-            }
-        </div>
-
-        <section class="movie-info">
-            <button class="btn btn-link px-0" type="button" @onclick="Voltar">
-                Voltar
-            </button>
-
-            <h1>@filme.Titulo</h1>
-
-            <div class="movie-meta">
-                @if (filme.Ano > 0)
-                {
-                    <span>@filme.Ano</span>
-                }
-
-                @if (!string.IsNullOrWhiteSpace(filme.Runtime))
-                {
-                    <span>@filme.Runtime</span>
-                }
-
-                @if (!string.IsNullOrWhiteSpace(filme.Rated))
-                {
-                    <span>@filme.Rated</span>
-                }
-            </div>
-
-            @if (!string.IsNullOrWhiteSpace(filme.Sinopse))
-            {
-                <p class="movie-overview">@filme.Sinopse</p>
             }
 
             <dl class="movie-facts">
@@ -92,6 +63,57 @@ else if (filme is not null)
                     </div>
                 }
             </dl>
+        </div>
+
+        <section class="movie-info">
+            <button class="btn btn-link px-0" type="button" @onclick="Voltar">
+                Voltar
+            </button>
+
+            <h1>@filme.Titulo</h1>
+
+            <div class="movie-meta">
+                @if (filme.Ano > 0)
+                {
+                    <span>@filme.Ano</span>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(filme.Runtime))
+                {
+                    <span>@filme.Runtime</span>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(filme.Rated))
+                {
+                    <span>@filme.Rated</span>
+                }
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(filme.Sinopse))
+            {
+                <p class="movie-overview">@filme.Sinopse</p>
+            }
+
+            @if (TemTrailer)
+            {
+                <section class="movie-player">
+                    <h2>Ver filme</h2>
+
+                    @if (!string.IsNullOrWhiteSpace(trailerEmbedUrl))
+                    {
+                        <iframe src="@trailerEmbedUrl"
+                                title="Trailer de @filme.Titulo"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowfullscreen></iframe>
+                    }
+                    else
+                    {
+                        <a class="btn btn-light" href="@filme.TrailerUrl" target="_blank" rel="noopener noreferrer">
+                            Ver filme
+                        </a>
+                    }
+                </section>
+            }
 
             @if (atores.Count > 0)
             {
@@ -174,11 +196,28 @@ else if (filme is not null)
         max-width: 760px;
     }
 
+    .movie-player {
+        margin-top: 1.25rem;
+    }
+
+    .movie-player h2 {
+        font-size: 1.1rem;
+        margin-bottom: .75rem;
+    }
+
+    .movie-player iframe {
+        aspect-ratio: 16 / 9;
+        border: 0;
+        border-radius: .5rem;
+        box-shadow: 0 14px 34px rgba(15, 23, 42, .22);
+        width: 100%;
+    }
+
     .movie-facts {
         display: grid;
         gap: .9rem;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        margin: 1.5rem 0;
+        grid-template-columns: 1fr;
+        margin: 1.25rem 0 0;
     }
 
     .movie-facts div {
@@ -245,8 +284,11 @@ else if (filme is not null)
 
     private Filme? filme;
     private List<FilmeAtor> atores = new();
+    private string? trailerEmbedUrl;
     private bool carregando = true;
     private string? erro;
+
+    private bool TemTrailer => !string.IsNullOrWhiteSpace(filme?.TrailerUrl);
 
     protected override async Task OnParametersSetAsync()
     {
@@ -263,6 +305,7 @@ else if (filme is not null)
         }
 
         filme = resultado.Value;
+        trailerEmbedUrl = ObterYoutubeEmbedUrl(filme.TrailerUrl);
         atores = filme.FilmeAtores
             .Where(filmeAtor => filmeAtor.Ator is not null)
             .OrderBy(filmeAtor => filmeAtor.Ator.Nome)
@@ -273,5 +316,35 @@ else if (filme is not null)
     private void Voltar()
     {
         NavigationManager.NavigateTo("/");
+    }
+
+    private static string? ObterYoutubeEmbedUrl(string? trailerUrl)
+    {
+        if (string.IsNullOrWhiteSpace(trailerUrl) ||
+            !Uri.TryCreate(trailerUrl, UriKind.Absolute, out var uri))
+        {
+            return null;
+        }
+
+        var host = uri.Host.ToLowerInvariant();
+
+        if (host.Contains("youtu.be"))
+        {
+            var videoId = uri.AbsolutePath.Trim('/');
+            return string.IsNullOrWhiteSpace(videoId)
+                ? null
+                : $"https://www.youtube.com/embed/{videoId}";
+        }
+
+        if (host.Contains("youtube.com"))
+        {
+            var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+            var videoId = query["v"];
+            return string.IsNullOrWhiteSpace(videoId)
+                ? null
+                : $"https://www.youtube.com/embed/{videoId}";
+        }
+
+        return null;
     }
 }
