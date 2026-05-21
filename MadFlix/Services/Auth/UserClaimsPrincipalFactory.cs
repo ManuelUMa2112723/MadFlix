@@ -12,7 +12,8 @@ public sealed class UserClaimsPrincipalFactory : IUserClaimsPrincipalFactory
         {
             new(ClaimTypes.NameIdentifier, utilizador.Id.ToString()),
             new(ClaimTypes.Name, utilizador.NomeUtilizador),
-            new(ClaimTypes.Email, utilizador.Email)
+            new(ClaimTypes.Email, utilizador.Email),
+            new(ClaimTypes.Role, utilizador.IsAdmin ? "Admin" : "User")
         };
 
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);

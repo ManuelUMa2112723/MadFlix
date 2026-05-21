@@ -53,8 +53,7 @@
                                         <p class="mb-0">@festival.Descricao</p>
                                     }
 
-                                    <button class="btn btn-sm btn-outline-secondary mt-3"
-                                            type="button"
+                                    <button class="btn btn-sm btn-outline-secondary mt-3" type="button"
                                             @onclick="() => AlternarCatalogoFestival(festival.Id)">
                                         @ObterTextoBotaoCatalogo(festival.Id)
                                     </button>
@@ -64,9 +63,7 @@
                                     <div class="row g-2">
                                         <div class="col-md-5">
                                             <label class="form-label" for="@($"tipo-acesso-{festival.Id}")">Tipo de acesso</label>
-                                            <select id="@($"tipo-acesso-{festival.Id}")"
-                                                    class="form-select"
-                                                    value="@compra.Tipo"
+                                            <select id="@($"tipo-acesso-{festival.Id}")" class="form-select" value="@compra.Tipo"
                                                     @onchange="e => AlterarTipoAcesso(festival.Id, e.Value?.ToString())">
                                                 <option value="@TipoAcesso.PasseDiario">Passe diario</option>
                                                 <option value="@TipoAcesso.PasseCompleto">Passe completo</option>
@@ -78,9 +75,7 @@
                                         {
                                             <div class="col-md-4">
                                                 <label class="form-label" for="@($"dia-acesso-{festival.Id}")">Dia</label>
-                                                <input id="@($"dia-acesso-{festival.Id}")"
-                                                       class="form-control"
-                                                       type="date"
+                                                <input id="@($"dia-acesso-{festival.Id}")" class="form-control" type="date"
                                                        value="@compra.DiaFestival.ToString("yyyy-MM-dd")"
                                                        @onchange="e => AlterarDiaFestival(festival.Id, e.Value?.ToString())" />
                                             </div>
@@ -89,10 +84,7 @@
                                         {
                                             <div class="col-md-4">
                                                 <label class="form-label" for="@($"horas-aluguer-{festival.Id}")">Horas</label>
-                                                <input id="@($"horas-aluguer-{festival.Id}")"
-                                                       class="form-control"
-                                                       type="number"
-                                                       min="1"
+                                                <input id="@($"horas-aluguer-{festival.Id}")" class="form-control" type="number" min="1"
                                                        value="@compra.HorasAluguer"
                                                        @onchange="e => AlterarHorasAluguer(festival.Id, e.Value?.ToString())" />
                                             </div>
@@ -101,8 +93,7 @@
                                         <AuthorizeView>
                                             <Authorized>
                                                 <div class="col-md-3 d-grid">
-                                                    <button class="btn btn-success"
-                                                            @onclick="() => AdicionarAoCarrinho(festival)">
+                                                    <button class="btn btn-success" @onclick="() => AdicionarAoCarrinho(festival)">
                                                         Adicionar ao carrinho
                                                     </button>
                                                 </div>
@@ -126,7 +117,8 @@
                                     {
                                         <p class="text-muted mb-0">A carregar catalogo...</p>
                                     }
-                                    else if (filmesPorFestival.TryGetValue(festival.Id, out var filmesFestival) && filmesFestival.Count > 0)
+                                    else if (filmesPorFestival.TryGetValue(festival.Id, out var filmesFestival) && filmesFestival.Count
+                    > 0)
                                     {
                                         <div class="row g-3">
                                             @foreach (var filmeFestival in filmesFestival)
@@ -161,24 +153,26 @@
 
 </section>
 
-<section class="border rounded p-3">
-    <h2 class="h4">Area reservada</h2>
-    <p class="text-muted mb-3">A criacao de festivais fica disponivel apenas para utilizadores autenticados.</p>
+<AuthorizeView Roles="Admin">
+    <Authorized>
+        <section class="border rounded p-3">
+            <h2 class="h4">Area reservada</h2>
+            <p class="text-muted mb-3">A criacao de festivais fica disponivel apenas para utilizadores autenticados.</p>
 
-    <AuthorizeView>
-        <Authorized>
             <button class="btn btn-primary mb-4" @onclick="AlternarFormulario">
                 @(mostrarFormulario ? "Cancelar adicao de festival" : "Adicionar festival")
             </button>
 
             @if (mostrarFormulario)
             {
-                <EditForm Model="form" OnValidSubmit="CriarFestival" Context="festivalEditContext" class="border rounded p-3 mb-4">
+                <EditForm Model="form" OnValidSubmit="CriarFestival" Context="festivalEditContext"
+                          class="border rounded p-3 mb-4">
                     <DataAnnotationsValidator />
 
                     <div class="mb-3">
                         <label class="form-label" for="nome">Nome</label>
-                        <InputText id="nome" class="form-control" @bind-Value="form.Nome" placeholder="Festival de Terror" />
+                        <InputText id="nome" class="form-control" @bind-Value="form.Nome"
+                                   placeholder="Festival de Terror" />
                     </div>
 
                     <div class="mb-3">
@@ -241,9 +235,7 @@
 
                         <div class="col-md-5">
                             <label class="form-label" for="titulo-filme-festival">Titulo do filme</label>
-                            <input id="titulo-filme-festival"
-                                   class="form-control"
-                                   @bind="filmeFestivalForm.Titulo"
+                            <input id="titulo-filme-festival" class="form-control" @bind="filmeFestivalForm.Titulo"
                                    placeholder="Inception" />
                         </div>
 
@@ -255,36 +247,11 @@
                     </div>
                 }
             </div>
-        </Authorized>
-        <NotAuthorized>
-            <a class="btn btn-primary" href="@GetLoginUrl()">Iniciar sessao</a>
-        </NotAuthorized>
-    </AuthorizeView>
-</section>
+        </section>
+    </Authorized>
+</AuthorizeView>
 
-<style>
-    .festival-movie-card {
-        cursor: pointer;
-        transition: border-color .15s ease, box-shadow .15s ease;
-    }
 
-    .festival-movie-card:hover {
-        border-color: #9aa4b2 !important;
-        box-shadow: 0 8px 20px rgba(15, 23, 42, .08);
-    }
-
-    .festival-user-button {
-        color: #9f0f1a;
-        border: 1px solid #ffffff;
-    }
-
-    .festival-user-button:hover,
-    .festival-user-button:focus {
-        color: #78000f;
-        background: #f8f9fa;
-        border-color: #ffffff;
-    }
-</style>
 
 @code {
     private const decimal PrecoPasseDiario = 9.99m;

@@ -328,6 +328,9 @@ namespace MadFlix.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsAdmin")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("NomeUtilizador")
                         .IsRequired()
                         .HasColumnType("TEXT");

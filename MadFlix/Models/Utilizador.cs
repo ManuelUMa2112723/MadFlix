@@ -9,6 +9,7 @@ public class Utilizador
     public string EmailNormalizado { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
     public DateTime CriadoEmUtc { get; set; } = DateTime.UtcNow;
+    public bool IsAdmin { get; set; } = false;
 
     public ICollection<FilmeCompra> Compras { get; set; } = new List<FilmeCompra>();
     public ICollection<FilmeVisualizacao> Visualizacoes { get; set; } = new List<FilmeVisualizacao>();
