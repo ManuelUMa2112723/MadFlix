@@ -1,3 +1,5 @@
+@using MadFlix.Models
+@using MadFlix.Services
 @page "/filmes/{FilmeId:int}"
 @rendermode InteractiveServer
 @using Microsoft.AspNetCore.Components
@@ -5,6 +7,7 @@
 @inject IComentarioFilmeService ComentarioFilmeService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
+@inject IListaPessoalService ListaPessoalService
 
 <PageTitle>@(filme?.Titulo ?? "Filme")</PageTitle>
 
@@ -95,6 +98,41 @@ else if (filme is not null)
             {
                 <p class="movie-overview">@filme.Sinopse</p>
             }
+            <AuthorizeView Roles="User,Admin">
+                <Authorized>
+                    <div class="mt-3">
+                        @if (listas.Count > 0)
+                        {
+                            <div class="d-flex gap-2 align-items-center">
+                                <select class="form-select" style="max-width: 250px;" @bind="listaSelecionadaId">
+                                    @foreach (var lista in listas)
+                                    {
+                                        <option value="@lista.Id">@lista.Nome</option>
+                                    }
+                                </select>
+                                <button class="btn btn-outline-light" @onclick="AdicionarALista">
+                                    Adicionar à lista
+                                </button>
+                            </div>
+                        }
+                        else
+                        {
+                            <a href="/perfil" class="btn btn-outline-light">
+                                Cria uma lista no perfil
+                            </a>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(mensagemLista))
+                        {
+                            <div class="alert alert-success mt-2">@mensagemLista</div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(erroLista))
+                        {
+                            <div class="alert alert-danger mt-2">@erroLista</div>
+                        }
+                    </div>
+                </Authorized>
+            </AuthorizeView>
 
             @if (TemTrailer)
             {
@@ -436,6 +474,11 @@ else if (filme is not null)
 
     private bool TemTrailer => !string.IsNullOrWhiteSpace(filme?.TrailerUrl);
 
+    private List<ListaPessoal> listas = new();
+    private int listaSelecionadaId;
+    private string? mensagemLista;
+    private string? erroLista;
+
     protected override async Task OnParametersSetAsync()
     {
         carregando = true;
@@ -457,7 +500,35 @@ else if (filme is not null)
             .OrderBy(filmeAtor => filmeAtor.Ator.Nome)
             .ToList();
         await CarregarComentarios();
+        
+        var utilizadorId = await ObterUtilizadorIdAutenticado();
+        if (utilizadorId is not null)
+        {
+            listas = (await ListaPessoalService.ListarAsync(utilizadorId.Value)).ToList();
+            if (listas.Count > 0)
+                listaSelecionadaId = listas[0].Id;
+        }
         carregando = false;
+    }
+
+    private async Task AdicionarALista()
+    {
+        mensagemLista = null;
+        erroLista = null;
+
+        var utilizadorId = await ObterUtilizadorIdAutenticado();
+        if (utilizadorId is null) return;
+
+        var resultado = await ListaPessoalService.AdicionarFilmeAsync(
+            listaSelecionadaId, FilmeId, utilizadorId.Value);
+
+        if (!resultado.Succeeded)
+        {
+            erroLista = resultado.ErrorMessage;
+            return;
+        }
+
+        mensagemLista = "Filme adicionado à lista com sucesso.";
     }
 
     private async Task CarregarComentarios()

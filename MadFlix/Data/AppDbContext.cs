@@ -21,6 +21,9 @@ public class AppDbContext : DbContext
     public DbSet<CarrinhoItem> CarrinhoItens { get; set; }
     public DbSet<ComentarioFilme> ComentariosFilmes { get; set; }
 
+    public DbSet<ListaPessoal> ListasPessoais { get; set; }
+    public DbSet<ListaPessoalFilme> ListasPessoaisFilmes { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Filme>()
@@ -115,5 +118,23 @@ public class AppDbContext : DbContext
             .HasOne(comentario => comentario.Utilizador)
             .WithMany(utilizador => utilizador.ComentariosFilmes)
             .HasForeignKey(comentario => comentario.UtilizadorId);
+        
+        modelBuilder.Entity<ListaPessoalFilme>()
+            .HasKey(lf => new { lf.ListaPessoalId, lf.FilmeId });
+
+        modelBuilder.Entity<ListaPessoalFilme>()
+            .HasOne(lf => lf.ListaPessoal)
+            .WithMany(l => l.ListaPessoalFilmes)
+            .HasForeignKey(lf => lf.ListaPessoalId);
+
+        modelBuilder.Entity<ListaPessoalFilme>()
+            .HasOne(lf => lf.Filme)
+            .WithMany()
+            .HasForeignKey(lf => lf.FilmeId);
+
+        modelBuilder.Entity<ListaPessoal>()
+            .HasOne(l => l.Utilizador)
+            .WithMany()
+            .HasForeignKey(l => l.UtilizadorId);
     }
 }

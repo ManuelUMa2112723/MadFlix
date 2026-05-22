@@ -1,0 +1,182 @@
+@page "/perfil"
+@rendermode InteractiveServer
+@using System.Security.Claims
+@using MadFlix.Models
+@using MadFlix.Services
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IListaPessoalService ListaPessoalService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Perfil</PageTitle>
+
+<h1>Perfil</h1>
+
+<AuthorizeView Roles="User,Admin">
+    <Authorized Context="authState">
+
+        <section class="border rounded p-3 mb-4">
+            <h2 class="h4">Informacao basica</h2>
+            <p><strong>Nome:</strong> @authState.User.Identity?.Name</p>
+            <p><strong>Email:</strong> @authState.User.FindFirst(ClaimTypes.Email)?.Value</p>
+        </section>
+
+        <section class="border rounded p-3 mb-4">
+            <h2 class="h4">Alterar password</h2>
+            <p class="text-muted">Em construcao...</p>
+        </section>
+
+        <section class="border rounded p-3 mb-4">
+            <h2 class="h4">Listas pessoais</h2>
+
+            <div class="d-flex gap-2 mb-3">
+                <input class="form-control" style="max-width: 300px;"
+                       @bind="nomeLista"
+                       placeholder="Nome da nova lista..." />
+                <button class="btn btn-primary" @onclick="CriarLista">
+                    Criar lista
+                </button>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(mensagem))
+            {
+                <div class="alert alert-success">@mensagem</div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(erro))
+            {
+                <div class="alert alert-danger">@erro</div>
+            }
+
+            @if (carregando)
+            {
+                <p>A carregar listas...</p>
+            }
+            else if (listas.Count == 0)
+            {
+                <p class="text-muted">Ainda nao tem listas pessoais.</p>
+            }
+            else
+            {
+                <div class="list-group">
+                    @foreach (var lista in listas)
+                    {
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h3 class="h6 mb-0">@lista.Nome</h3>
+                                <button class="btn btn-sm btn-outline-danger"
+                                        @onclick="() => EliminarLista(lista.Id)">
+                                    Eliminar
+                                </button>
+                            </div>
+
+                            @if (lista.ListaPessoalFilmes.Count > 0)
+                            {
+                                <ul class="mt-2 mb-0">
+                                    @foreach (var lf in lista.ListaPessoalFilmes)
+                                    {
+                                        <li class="d-flex justify-content-between align-items-center">
+                                            <span>@lf.Filme.Titulo (@lf.Filme.Ano)</span>
+                                            <button class="btn btn-sm btn-link text-danger"
+                                                    @onclick="() => RemoverFilme(lista.Id, lf.FilmeId)">
+                                                Remover
+                                            </button>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <p class="text-muted mt-2 mb-0 small">Esta lista ainda nao tem filmes.</p>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </section>
+
+    </Authorized>
+    <NotAuthorized>
+        <p>Tem de iniciar sessao para aceder ao perfil.</p>
+        <a href="/login" class="btn btn-primary">Iniciar sessao</a>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private List<ListaPessoal> listas = new();
+    private string nomeLista = string.Empty;
+    private bool carregando = true;
+    private string? mensagem;
+    private string? erro;
+    private int utilizadorId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var idClaim = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (int.TryParse(idClaim, out var id))
+        {
+            utilizadorId = id;
+            await CarregarListas();
+        }
+
+        carregando = false;
+    }
+
+    private async Task CarregarListas()
+    {
+        listas = (await ListaPessoalService.ListarAsync(utilizadorId)).ToList();
+    }
+
+    private async Task CriarLista()
+    {
+        mensagem = null;
+        erro = null;
+
+        var resultado = await ListaPessoalService.CriarAsync(utilizadorId, nomeLista);
+
+        if (!resultado.Succeeded)
+        {
+            erro = resultado.ErrorMessage;
+            return;
+        }
+
+        nomeLista = string.Empty;
+        mensagem = "Lista criada com sucesso.";
+        await CarregarListas();
+    }
+
+    private async Task EliminarLista(int listaId)
+    {
+        mensagem = null;
+        erro = null;
+
+        var resultado = await ListaPessoalService.EliminarAsync(listaId, utilizadorId);
+
+        if (!resultado.Succeeded)
+        {
+            erro = resultado.ErrorMessage;
+            return;
+        }
+
+        mensagem = "Lista eliminada com sucesso.";
+        await CarregarListas();
+    }
+
+    private async Task RemoverFilme(int listaId, int filmeId)
+    {
+        mensagem = null;
+        erro = null;
+
+        var resultado = await ListaPessoalService.RemoverFilmeAsync(listaId, filmeId, utilizadorId);
+
+        if (!resultado.Succeeded)
+        {
+            erro = resultado.ErrorMessage;
+            return;
+        }
+
+        mensagem = "Filme removido da lista.";
+        await CarregarListas();
+    }
+}

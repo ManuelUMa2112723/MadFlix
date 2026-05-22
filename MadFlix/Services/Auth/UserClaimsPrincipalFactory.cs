@@ -10,11 +10,14 @@ public sealed class UserClaimsPrincipalFactory : IUserClaimsPrincipalFactory
     {
         var claims = new List<Claim>
         {
-            new(ClaimTypes.NameIdentifier, utilizador.Id.ToString()),
-            new(ClaimTypes.Name, utilizador.NomeUtilizador),
-            new(ClaimTypes.Email, utilizador.Email),
-            new(ClaimTypes.Role, utilizador.IsAdmin ? "Admin" : "User")
+            new Claim(ClaimTypes.NameIdentifier, utilizador.Id.ToString()),
+            new Claim(ClaimTypes.Name, utilizador.NomeUtilizador),
+            new Claim(ClaimTypes.Email, utilizador.Email),
+            new Claim(ClaimTypes.Role, "User")
         };
+
+        if (utilizador.IsAdmin)
+            claims.Add(new Claim(ClaimTypes.Role, "Admin"));
 
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         return new ClaimsPrincipal(identity);

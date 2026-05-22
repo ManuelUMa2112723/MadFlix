@@ -48,6 +48,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IFestivalRepository, EfFestivalRepository>();
         services.AddScoped<ICarrinhoRepository, EfCarrinhoRepository>();
         services.AddScoped<IComentarioFilmeRepository, EfComentarioFilmeRepository>();
+        services.AddScoped<IListaPessoalRepository, ListaPessoalRepository>();
 
         return services;
     }
@@ -84,6 +85,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IFestivalSubject, FestivalSubject>();
         services.AddSingleton<IFestivalObserver, FestivalNotificationObserver>();
         services.AddScoped<IUserNotificationFeed, UserNotificationCenter>();
+
+        services.AddScoped<IListaPessoalService, ListaPessoalService>();
 
         return services;
     }

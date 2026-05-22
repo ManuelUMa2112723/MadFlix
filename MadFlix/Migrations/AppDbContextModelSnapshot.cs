@@ -311,6 +311,41 @@ namespace MadFlix.Migrations
                     b.ToTable("FilmeVisualizacoes");
                 });
 
+            modelBuilder.Entity("MadFlix.Models.ListaPessoal", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("UtilizadorId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UtilizadorId");
+
+                    b.ToTable("ListasPessoais");
+                });
+
+            modelBuilder.Entity("MadFlix.Models.ListaPessoalFilme", b =>
+                {
+                    b.Property<int>("ListaPessoalId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("FilmeId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("ListaPessoalId", "FilmeId");
+
+                    b.HasIndex("FilmeId");
+
+                    b.ToTable("ListasPessoaisFilmes");
+                });
+
             modelBuilder.Entity("MadFlix.Models.Utilizador", b =>
                 {
                     b.Property<int>("Id")
@@ -479,6 +514,36 @@ namespace MadFlix.Migrations
                     b.Navigation("Utilizador");
                 });
 
+            modelBuilder.Entity("MadFlix.Models.ListaPessoal", b =>
+                {
+                    b.HasOne("MadFlix.Models.Utilizador", "Utilizador")
+                        .WithMany()
+                        .HasForeignKey("UtilizadorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Utilizador");
+                });
+
+            modelBuilder.Entity("MadFlix.Models.ListaPessoalFilme", b =>
+                {
+                    b.HasOne("MadFlix.Models.Filme", "Filme")
+                        .WithMany()
+                        .HasForeignKey("FilmeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MadFlix.Models.ListaPessoal", "ListaPessoal")
+                        .WithMany("ListaPessoalFilmes")
+                        .HasForeignKey("ListaPessoalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Filme");
+
+                    b.Navigation("ListaPessoal");
+                });
+
             modelBuilder.Entity("MadFlix.Models.Ator", b =>
                 {
                     b.Navigation("FilmeAtores");
@@ -512,6 +577,11 @@ namespace MadFlix.Migrations
                     b.Navigation("FilmeAtores");
 
                     b.Navigation("Visualizacoes");
+                });
+
+            modelBuilder.Entity("MadFlix.Models.ListaPessoal", b =>
+                {
+                    b.Navigation("ListaPessoalFilmes");
                 });
 
             modelBuilder.Entity("MadFlix.Models.Utilizador", b =>
