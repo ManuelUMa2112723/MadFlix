@@ -2,48 +2,13 @@
 @rendermode InteractiveServer
 @inject ICarrinhoService CarrinhoService
 @inject IFilmeCatalogService FilmeCatalogService
-@inject IFilmePurchaseService FilmePurchaseService
-@inject IFilmePlaybackService FilmePlaybackService
+@inject IFestivalCatalogService FestivalCatalogService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 
 <PageTitle>MadFlix</PageTitle>
 
-<HomeHero />
-
-<MovieSearchPanel SearchTerm="@termoBusca"
-                  SearchType="@tipoBusca"
-                  IsLoading="@carregando"
-                  SearchTermChanged="@AtualizarTermoBusca"
-                  SearchTypeChanged="@AtualizarTipoBusca"
-                  SearchRequested="@Buscar" />
-
-@if (erro != null)
-{
-    <div class="alert alert-danger home-alert">@erro</div>
-}
-
-@if (filme != null)
-{
-    <MovieSpotlight Movie="@filme"
-                    IsAuthenticated="@utilizadorAutenticado"
-                    LoginUrl="@GetLoginUrl()"
-                    RegisterUrl="@GetRegisterUrl()"
-                    BuyRequested="@ComprarFilmeAsync"
-                    TicketRequested="@(() => AdicionarBilheteSessaoAoCarrinhoAsync(filme))"
-                    WatchRequested="@AssistirFilmeAsync"
-                    MovieSelected="@AbrirDetalhesFilme" />
-}
-
-@if (!string.IsNullOrWhiteSpace(mensagemAcao))
-{
-    <div class="alert alert-success home-alert">@mensagemAcao</div>
-}
-
-@if (!string.IsNullOrWhiteSpace(erroAcao))
-{
-    <div class="alert alert-danger home-alert">@erroAcao</div>
-}
+<HomeHero FeaturedFestival="@festivalDestaque" />
 
 @if (!string.IsNullOrWhiteSpace(mensagemCarrinho))
 {
@@ -66,7 +31,7 @@
            MovieSelected="@AbrirDetalhesFilme"
            TicketRequested="@AdicionarBilheteSessaoAoCarrinhoAsync" />
 
-<HomeExperienceSections />
+<FestivalRail Festivals="@festivaisDestaque" />
 
 @code {
     private readonly string[] titulosRecomendados =
@@ -81,14 +46,9 @@
 
     private const decimal PrecoBilheteSessao = 6.99m;
     private readonly List<Filme> filmesRecomendados = new();
-    private string termoBusca = string.Empty;
-    private string tipoBusca = "filme";
-    private Filme? filme;
-    private bool carregando;
+    private IReadOnlyList<Festival> festivaisDestaque = [];
+    private Festival? festivalDestaque;
     private bool carregandoRecomendados = true;
-    private string? erro;
-    private string? mensagemAcao;
-    private string? erroAcao;
     private string? mensagemCarrinho;
     private string? erroCarrinho;
     private bool utilizadorAutenticado;
@@ -97,7 +57,22 @@
     protected override async Task OnInitializedAsync()
     {
         await CarregarUtilizadorAtualAsync();
+        await CarregarFestivalDestaqueAsync();
         await CarregarRecomendadosAsync();
+    }
+
+    private async Task CarregarFestivalDestaqueAsync()
+    {
+        var hoje = DateTime.Today;
+        var festivais = await FestivalCatalogService.ListarAsync();
+
+        festivaisDestaque = festivais
+            .OrderBy(f => f.DataFim.Date < hoje)
+            .ThenBy(f => f.DataInicio.Date < hoje ? hoje : f.DataInicio.Date)
+            .ToList();
+
+        festivalDestaque = festivaisDestaque
+            .FirstOrDefault();
     }
 
     private async Task CarregarRecomendadosAsync()
@@ -113,101 +88,11 @@
         carregandoRecomendados = false;
     }
 
-    private Task AtualizarTermoBusca(string novoTermo)
-    {
-        termoBusca = novoTermo;
-        return Task.CompletedTask;
-    }
-
-    private Task AtualizarTipoBusca(string novoTipo)
-    {
-        tipoBusca = novoTipo;
-        return Task.CompletedTask;
-    }
-
-    private async Task Buscar()
-    {
-        if (string.IsNullOrWhiteSpace(termoBusca))
-            return;
-
-        if (tipoBusca == "ator")
-        {
-            NavigationManager.NavigateTo($"/ator?nome={Uri.EscapeDataString(termoBusca)}");
-            return;
-        }
-
-        carregando = true;
-        erro = null;
-        erroAcao = null;
-        mensagemAcao = null;
-        filme = null;
-
-        var resultado = await FilmeCatalogService.BuscarFilmeAsync(termoBusca);
-
-        if (!resultado.Succeeded || resultado.Value is null)
-        {
-            erro = resultado.ErrorMessage;
-            carregando = false;
-            return;
-        }
-
-        filme = resultado.Value;
-        carregando = false;
-    }
-
-    private async Task AssistirFilmeAsync()
-    {
-        await CarregarUtilizadorAtualAsync();
-
-        if (!utilizadorId.HasValue || filme is null)
-        {
-            erroAcao = "Tem de iniciar sessao para assistir.";
-            mensagemAcao = null;
-            return;
-        }
-
-        var resultado = await FilmePlaybackService.AssistirAsync(utilizadorId.Value, filme.Id);
-
-        if (!resultado.Succeeded)
-        {
-            mensagemAcao = null;
-            erroAcao = resultado.ErrorMessage;
-            return;
-        }
-
-        erroAcao = null;
-        mensagemAcao = resultado.Value;
-    }
-
     private async Task CarregarUtilizadorAtualAsync()
     {
         var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         utilizadorId = authenticationState.User.GetMadFlixUserId();
         utilizadorAutenticado = utilizadorId.HasValue;
-    }
-
-    private async Task ComprarFilmeAsync()
-    {
-        await CarregarUtilizadorAtualAsync();
-
-        if (!utilizadorId.HasValue || filme is null)
-        {
-            erroAcao = "Tem de iniciar sessao para comprar.";
-            mensagemAcao = null;
-            return;
-        }
-
-        var resultado = await FilmePurchaseService.ComprarAsync(utilizadorId.Value, filme.Id);
-
-        if (!resultado.Succeeded)
-        {
-            mensagemAcao = null;
-            erroAcao = resultado.ErrorMessage;
-            return;
-        }
-
-        erroAcao = null;
-        mensagemAcao = resultado.Value;
     }
 
     private void AbrirDetalhesFilme(int filmeId)
@@ -241,15 +126,5 @@
 
         erroCarrinho = null;
         mensagemCarrinho = $"{resultado.Value} Sessao das 11:30 as 16:30.";
-    }
-
-    private string GetLoginUrl()
-    {
-        return $"/login?returnUrl={Uri.EscapeDataString(NavigationManager.ToLocalPath())}";
-    }
-
-    private string GetRegisterUrl()
-    {
-        return $"/registar?returnUrl={Uri.EscapeDataString(NavigationManager.ToLocalPath())}";
     }
 }

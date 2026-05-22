@@ -1,0 +1,59 @@
+h1 {
+    color: #ffffff;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    line-height: 0.95;
+    margin: 1.5rem 0 1.25rem;
+}
+
+.movie-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    margin-top: 1.5rem;
+}
+
+.movie-card {
+    background: #f5f1e8;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 8px;
+    color: #111827;
+    overflow: hidden;
+}
+
+.movie-card img,
+.movie-card-placeholder {
+    aspect-ratio: 2 / 3;
+    background: #111827;
+    color: #fff;
+    object-fit: cover;
+    width: 100%;
+}
+
+.movie-card-placeholder {
+    align-items: center;
+    display: flex;
+    font-weight: 800;
+    justify-content: center;
+    padding: 1rem;
+    text-align: center;
+}
+
+.movie-card-body {
+    padding: 0.85rem;
+}
+
+.movie-card-body h3 {
+    color: #111827;
+    font-size: 1rem;
+    line-height: 1.2;
+    margin: 0 0 0.45rem;
+}
+
+.movie-card-body p {
+    color: #5b6472;
+    font-family: Inter, Arial, sans-serif;
+    font-size: 0.9rem;
+    font-weight: 800;
+    margin: 0;
+}
+

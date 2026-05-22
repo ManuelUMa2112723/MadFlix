@@ -1,0 +1,185 @@
+.festival-row {
+    margin-bottom: clamp(2rem, 4vw, 3.25rem);
+}
+
+.festival-row-heading {
+    align-items: center;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    margin-bottom: 0.65rem;
+}
+
+.festival-row-heading h3 {
+    color: #e6e9ef;
+    font-size: clamp(1.25rem, 2.4vw, 1.8rem);
+    line-height: 1.1;
+    margin: 0;
+}
+
+.festival-row-heading span {
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.1));
+    border-radius: 999px;
+    display: block;
+    height: 0.16rem;
+    width: 4rem;
+}
+
+.festival-rail-body {
+    position: relative;
+}
+
+.festival-rail-body::before,
+.festival-rail-body::after {
+    bottom: 0.45rem;
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    top: 0;
+    width: 3rem;
+    z-index: 3;
+}
+
+.festival-rail-body::before {
+    background: linear-gradient(90deg, #111827 0%, rgba(17, 24, 39, 0) 100%);
+    left: -0.25rem;
+}
+
+.festival-rail-body::after {
+    background: linear-gradient(270deg, #111827 0%, rgba(17, 24, 39, 0) 100%);
+    right: -0.25rem;
+}
+
+.festival-strip {
+    display: flex;
+    gap: 0.45rem;
+    overflow-x: auto;
+    padding: 0.2rem 0 0.75rem;
+    scroll-snap-type: x proximity;
+}
+
+.festival-strip::-webkit-scrollbar {
+    height: 0.35rem;
+}
+
+.festival-strip::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.festival-strip::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
+}
+
+.festival-tile {
+    background:
+        linear-gradient(180deg, rgba(8, 11, 18, 0.04), rgba(8, 11, 18, 0.78)),
+        var(--festival-bg);
+    background-position: center;
+    background-size: cover;
+    border-radius: 4px;
+    color: #ffffff !important;
+    flex: 0 0 clamp(250px, 19vw, 350px);
+    min-height: 105px;
+    overflow: hidden;
+    position: relative;
+    scroll-snap-align: start;
+    text-decoration: none;
+    transition: transform 0.18s ease, filter 0.18s ease;
+}
+
+.festival-tile:hover,
+.festival-tile:focus {
+    filter: brightness(1.08);
+    transform: scale(1.04);
+    z-index: 2;
+}
+
+.festival-overlay {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-height: 105px;
+    padding: 0.7rem;
+}
+
+.festival-genre {
+    background: #e50914;
+    border-radius: 2px;
+    color: #ffffff;
+    display: inline-flex;
+    font-family: Inter, Arial, sans-serif;
+    font-size: 0.66rem;
+    font-weight: 900;
+    margin-bottom: 0.35rem;
+    padding: 0.18rem 0.35rem;
+    text-transform: uppercase;
+    width: fit-content;
+}
+
+.festival-tile strong {
+    display: block;
+    font-size: 1.05rem;
+    line-height: 1.05;
+    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.75);
+}
+
+.festival-tile small {
+    color: #e6e9ef;
+    font-family: Inter, Arial, sans-serif;
+    font-size: 0.78rem;
+    font-weight: 800;
+    margin-top: 0.28rem;
+    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.75);
+}
+
+.rail-arrow {
+    align-items: center;
+    background: rgba(8, 11, 18, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+    color: #ffffff;
+    display: inline-flex;
+    font-family: Inter, Arial, sans-serif;
+    font-size: 1.55rem;
+    font-weight: 900;
+    height: 2.35rem;
+    justify-content: center;
+    line-height: 1;
+    padding: 0;
+    position: absolute;
+    top: 48%;
+    transform: translateY(-50%);
+    transition: background-color 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+    width: 2.35rem;
+    z-index: 4;
+}
+
+.rail-arrow:hover,
+.rail-arrow:focus-visible {
+    background: rgba(244, 201, 93, 0.22);
+    border-color: #f4c95d;
+    transform: translateY(-50%) scale(1.06);
+}
+
+.rail-arrow-left {
+    left: -1.15rem;
+}
+
+.rail-arrow-right {
+    right: -1.15rem;
+}
+
+@media (max-width: 640px) {
+    .festival-tile {
+        flex-basis: 235px;
+    }
+
+    .rail-arrow-left {
+        left: 0.2rem;
+    }
+
+    .rail-arrow-right {
+        right: 0.2rem;
+    }
+}

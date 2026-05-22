@@ -1,0 +1,44 @@
+<section class="festival-rail" aria-labelledby="festival-rail-title">
+    <div class="festival-heading">
+        <div>
+            <p class="section-kicker">Festivais</p>
+            <h2 id="festival-rail-title">Festivais em cartaz</h2>
+        </div>
+        <a class="section-link" href="festivais">Ver todos</a>
+    </div>
+
+    @if (Festivals.Count == 0)
+    {
+        <div class="festival-empty">
+            <strong>Nenhum festival disponivel.</strong>
+            <span>Volta mais tarde para novas sessoes especiais.</span>
+        </div>
+    }
+    else
+    {
+        <FestivalStrip Title="Festivais emocionantes" Festivals="@FeaturedFestivals" StartIndex="0" />
+        <FestivalStrip Title="Novidades na MadFlix" Festivals="@UpcomingFestivals" StartIndex="5" />
+        <FestivalStrip Title="Sessoes especiais aclamadas pela critica" Festivals="@Festivals" StartIndex="10" />
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<Festival> Festivals { get; set; } = [];
+
+    private IReadOnlyList<Festival> FeaturedFestivals => Festivals.Take(8).ToList();
+
+    private IReadOnlyList<Festival> UpcomingFestivals
+    {
+        get
+        {
+            var hoje = DateTime.Today;
+            var proximos = Festivals
+                .Where(f => f.DataFim.Date >= hoje)
+                .OrderBy(f => f.DataInicio)
+                .Take(8)
+                .ToList();
+
+            return proximos.Count > 0 ? proximos : FeaturedFestivals;
+        }
+    }
+}

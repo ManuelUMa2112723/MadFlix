@@ -1,0 +1,77 @@
+@implements IAsyncDisposable
+@inject IJSRuntime JSRuntime
+
+<div class="festival-row">
+    <div class="festival-row-heading">
+        <h3>@Title</h3>
+        <span aria-hidden="true"></span>
+    </div>
+
+    <div class="festival-rail-body">
+        <button class="rail-arrow rail-arrow-left"
+                type="button"
+                aria-label="Ver festivais anteriores"
+                @onclick="() => ScrollAsync(-1)">
+            &lt;
+        </button>
+        <div class="festival-strip" @ref="stripElement">
+            @for (var index = 0; index < Festivals.Count; index++)
+            {
+                var festival = Festivals[index];
+                <a class="festival-tile"
+                   style="--festival-bg: url('@GetFestivalImage(index + StartIndex)')"
+                   href="festivais">
+                    <div class="festival-overlay">
+                        <span class="festival-genre">@festival.Genero</span>
+                        <strong>@festival.Nome</strong>
+                        <small>@festival.DataInicio.ToString("dd/MM") - @festival.DataFim.ToString("dd/MM/yyyy")</small>
+                    </div>
+                </a>
+            }
+        </div>
+        <button class="rail-arrow rail-arrow-right"
+                type="button"
+                aria-label="Ver mais festivais"
+                @onclick="() => ScrollAsync(1)">
+            &gt;
+        </button>
+    </div>
+</div>
+
+@code {
+    private static readonly string[] FestivalImages =
+    [
+        "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1505686994434-e3cc5abf1330?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1524985069026-dd778a71c7b4?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1503095396549-807759245b35?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=900&q=80"
+    ];
+
+    [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public IReadOnlyList<Festival> Festivals { get; set; } = [];
+    [Parameter] public int StartIndex { get; set; }
+    private ElementReference stripElement;
+    private IJSObjectReference? module;
+
+    private static string GetFestivalImage(int index)
+    {
+        return FestivalImages[index % FestivalImages.Length];
+    }
+
+    private async Task ScrollAsync(int direction)
+    {
+        module ??= await JSRuntime.InvokeAsync<IJSObjectReference>(
+            "import",
+            "./Components/Home/FestivalStrip.razor.js");
+
+        await module.InvokeVoidAsync("scrollFestivalStrip", stripElement, direction);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (module is not null)
+            await module.DisposeAsync();
+    }
+}

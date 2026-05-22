@@ -1,37 +1,55 @@
 <section class="hero-stage" aria-labelledby="home-hero-title">
-    <div class="hero-copy">
-        <p class="hero-kicker">Cinema, festivais e bilhetes digitais</p>
-        <h1 id="home-hero-title">MadFlix</h1>
-        <p class="hero-lead">Pesquisa filmes, descobre sessoes e entra numa sala digital feita para comprar, assistir e guardar os teus favoritos.</p>
+    <div class="hero-content">
+        <div class="hero-copy">
+            <p class="hero-kicker">Festival em destaque</p>
 
-        <div class="hero-actions" aria-label="Acoes principais">
-            <a class="btn hero-primary" href="#catalogo">Explorar catalogo</a>
-            <a class="btn hero-secondary" href="festivais">Ver festivais</a>
+            @if (FeaturedFestival is not null)
+            {
+                <h1 id="home-hero-title">@FeaturedFestival.Nome</h1>
+                <p class="hero-lead">@GetFestivalDescription()</p>
+
+                <div class="hero-meta" aria-label="Detalhes do festival">
+                    <span>@FeaturedFestival.Genero</span>
+                    <span>@FeaturedFestival.DataInicio.ToString("dd/MM/yyyy") - @FeaturedFestival.DataFim.ToString("dd/MM/yyyy")</span>
+                    <span>13+</span>
+                </div>
+            }
+            else
+            {
+                <h1 id="home-hero-title">MadFlix</h1>
+                <p class="hero-lead">Pesquisa filmes, descobre sessoes e entra numa sala digital feita para comprar, assistir e guardar os teus favoritos.</p>
+
+                <div class="hero-meta" aria-label="Detalhes MadFlix">
+                    <span>4K</span>
+                    <span>24h acesso digital</span>
+                    <span>11:30 sessao diaria</span>
+                </div>
+            }
+
+            <div class="hero-actions" aria-label="Acoes principais">
+                <a class="btn hero-primary" href="festivais">
+                    <span aria-hidden="true" class="play-icon"></span>
+                    Ver acessos
+                </a>
+                <a class="btn hero-secondary" href="#catalogo">
+                    <span aria-hidden="true" class="info-icon">i</span>
+                    Mais informacoes
+                </a>
+            </div>
         </div>
 
-        <dl class="hero-metrics" aria-label="Indicadores MadFlix">
-            <div>
-                <dt>4K</dt>
-                <dd>streaming</dd>
-            </div>
-            <div>
-                <dt>24h</dt>
-                <dd>acesso digital</dd>
-            </div>
-            <div>
-                <dt>11:30</dt>
-                <dd>sessao diaria</dd>
-            </div>
-        </dl>
-    </div>
-
-    <div class="hero-panel" aria-label="Destaque editorial">
-        <div class="hero-poster hero-poster-main"></div>
-        <div class="hero-poster hero-poster-side"></div>
-        <div class="hero-now">
-            <span>Agora em destaque</span>
-            <strong>Sessoes selecionadas para hoje</strong>
-        </div>
+        <div class="hero-rating" aria-label="Classificacao indicativa">13+</div>
     </div>
 </section>
 
+@code {
+    [Parameter] public Festival? FeaturedFestival { get; set; }
+
+    private string GetFestivalDescription()
+    {
+        if (!string.IsNullOrWhiteSpace(FeaturedFestival?.Descricao))
+            return FeaturedFestival.Descricao;
+
+        return "Um programa especial MadFlix com sessoes selecionadas, passes digitais e acesso direto ao carrinho.";
+    }
+}

@@ -20,36 +20,45 @@
     }
     else if (Movies.Count > 0)
     {
-        <div class="movie-grid">
-            @foreach (var movie in Movies)
-            {
-                <article class="movie-card clickable-movie" @onclick="() => MovieSelected.InvokeAsync(movie.Id)">
-                    <div class="movie-poster">
-                        @if (!string.IsNullOrWhiteSpace(movie.Poster) && movie.Poster != "N/A")
-                        {
-                            <img src="@movie.Poster" alt="@movie.Titulo" />
-                        }
-                        else
-                        {
-                            <div class="poster-fallback">@movie.Titulo</div>
-                        }
-                        <span class="rating-pill">IMDb @(movie.ImdbRating?.ToString("0.0") ?? "N/A")</span>
-                    </div>
+        <div class="movie-rail-body">
+            <span class="rail-arrow rail-arrow-left" aria-hidden="true">&lt;</span>
+            <div class="movie-grid">
+                @for (var index = 0; index < Movies.Count; index++)
+                {
+                    var movie = Movies[index];
 
-                    <div class="movie-card-body">
-                        <h3>@movie.Titulo</h3>
-                        <p>@movie.Genero</p>
-                        <small>Sessao: 11:30 - 16:30</small>
-                        <button class="btn btn-card-action"
-                                type="button"
-                                @onclick:stopPropagation="true"
-                                @onclick="() => TicketRequested.InvokeAsync(movie)"
-                                disabled="@(!IsAuthenticated)">
-                            Adicionar bilhete
-                        </button>
-                    </div>
-                </article>
-            }
+                    <article class="movie-card clickable-movie"
+                             style="--movie-rank:@(index + 1)"
+                             @onclick="() => MovieSelected.InvokeAsync(movie.Id)">
+                        <span class="rank-number" aria-hidden="true">@(index + 1)</span>
+                        <div class="movie-poster">
+                            @if (!string.IsNullOrWhiteSpace(movie.Poster) && movie.Poster != "N/A")
+                            {
+                                <img src="@movie.Poster" alt="@movie.Titulo" />
+                            }
+                            else
+                            {
+                                <div class="poster-fallback">@movie.Titulo</div>
+                            }
+                            <span class="rating-pill">IMDb @(movie.ImdbRating?.ToString("0.0") ?? "N/A")</span>
+                        </div>
+
+                        <div class="movie-card-body">
+                            <h3>@movie.Titulo</h3>
+                            <p>@movie.Genero</p>
+                            <small>11:30 - 16:30</small>
+                            <button class="btn btn-card-action"
+                                    type="button"
+                                    @onclick:stopPropagation="true"
+                                    @onclick="() => TicketRequested.InvokeAsync(movie)"
+                                    disabled="@(!IsAuthenticated)">
+                                Adicionar bilhete
+                            </button>
+                        </div>
+                    </article>
+                }
+            </div>
+            <span class="rail-arrow rail-arrow-right" aria-hidden="true">&gt;</span>
         </div>
     }
     else
@@ -73,4 +82,3 @@
     [Parameter] public EventCallback<int> MovieSelected { get; set; }
     [Parameter] public EventCallback<Filme> TicketRequested { get; set; }
 }
-

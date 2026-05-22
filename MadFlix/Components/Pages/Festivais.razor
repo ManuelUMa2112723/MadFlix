@@ -10,15 +10,14 @@
 
 <PageTitle>Festivais</PageTitle>
 
-<section class="festivals-hero" aria-labelledby="festivals-title">
-    <p class="festival-kicker">Programacao MadFlix</p>
-    <h1 id="festivals-title">Festivais</h1>
-    <p>Escolhe o tipo de acesso, consulta sessoes e adiciona passes ao carrinho sem sair da pagina.</p>
-</section>
-
-<section class="festival-panel">
-    <h2>Area do utilizador</h2>
-    <p class="festival-intro mb-3">Visualizacao simples dos festivais disponiveis.</p>
+<section class="festival-panel" id="festivais-disponiveis">
+    <div class="festival-panel-heading">
+        <div>
+            <p class="festival-kicker">Acessos digitais</p>
+            <h2>Festivais disponiveis</h2>
+        </div>
+        <span>@festivais.Count programa(s)</span>
+    </div>
 
     @if (!string.IsNullOrWhiteSpace(mensagemCarrinho))
     {
@@ -33,11 +32,12 @@
             else if (festivais.Count > 0)
             {
                 <div class="festival-list">
-                    @foreach (var festival in festivais)
+                    @for (var index = 0; index < festivais.Count; index++)
                     {
+                        var festival = festivais[index];
                         var compra = ObterCompraFestival(festival);
 
-                        <article class="festival-card">
+                        <article class="festival-card" style="--festival-card-bg: url('@GetFestivalImage(index)')">
                             <div class="festival-card-grid">
                                 <div class="festival-summary">
                                     <span class="festival-label">@festival.Genero</span>
@@ -290,6 +290,16 @@
     private string? mensagemCarrinho;
     private string? erro;
 
+    private static readonly string[] FestivalImages =
+    [
+        "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=1800&q=85",
+        "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1800&q=85",
+        "https://images.unsplash.com/photo-1505686994434-e3cc5abf1330?auto=format&fit=crop&w=1800&q=85",
+        "https://images.unsplash.com/photo-1524985069026-dd778a71c7b4?auto=format&fit=crop&w=1800&q=85",
+        "https://images.unsplash.com/photo-1503095396549-807759245b35?auto=format&fit=crop&w=1800&q=85",
+        "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1800&q=85"
+    ];
+
     protected override async Task OnInitializedAsync()
     {
         await CarregarFestivais();
@@ -308,6 +318,11 @@
     private void EsconderFormulario()
     {
         mostrarFormulario = false;
+    }
+
+    private static string GetFestivalImage(int index)
+    {
+        return FestivalImages[index % FestivalImages.Length];
     }
 
     private async Task CarregarFestivais()

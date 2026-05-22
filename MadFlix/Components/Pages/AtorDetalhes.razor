@@ -46,55 +46,6 @@ else
     }
 }
 
-<style>
-    .movie-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-        gap: 1rem;
-        margin-top: 1.5rem;
-    }
-
-    .movie-card {
-        border: 1px solid #dee2e6;
-        border-radius: .5rem;
-        overflow: hidden;
-        background: #fff;
-    }
-
-    .movie-card img,
-    .movie-card-placeholder {
-        width: 100%;
-        aspect-ratio: 2 / 3;
-        object-fit: cover;
-        background: #111827;
-        color: #fff;
-    }
-
-    .movie-card-placeholder {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 1rem;
-        text-align: center;
-        font-weight: 600;
-    }
-
-    .movie-card-body {
-        padding: .75rem;
-    }
-
-    .movie-card-body h3 {
-        font-size: 1rem;
-        margin: 0 0 .35rem;
-    }
-
-    .movie-card-body p {
-        color: #6c757d;
-        font-size: .9rem;
-        margin: 0;
-    }
-</style>
-
 @code {
     [SupplyParameterFromQuery(Name = "nome")]
     public string? Nome { get; set; }

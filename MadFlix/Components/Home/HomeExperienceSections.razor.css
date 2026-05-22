@@ -1,11 +1,11 @@
 .experience-grid,
 .schedule-band {
-    margin: 0 auto 2rem;
+    margin: 0 auto clamp(3rem, 6vw, 5rem);
     max-width: 1180px;
 }
 
 .section-heading {
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
 }
 
 .section-kicker {
@@ -98,4 +98,3 @@
         grid-template-columns: 1fr;
     }
 }
-
