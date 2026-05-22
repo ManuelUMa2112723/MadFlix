@@ -19,6 +19,8 @@ public sealed class CarrinhoService : ICarrinhoService
     private readonly IUserNotificationSubject _notificationSubject;
     private readonly IUtilizadorRepository _utilizadorRepository;
     private const int SessaoEstaticaId = 1;
+    private const int HoraSessaoIndividualTeste = 11;
+    private const int MinutoSessaoIndividualTeste = 30;
     private static readonly TimeSpan DuracaoJanelaBilheteSessao = TimeSpan.FromHours(5);
 
     public CarrinhoService(
@@ -266,7 +268,7 @@ public sealed class CarrinhoService : ICarrinhoService
     private static DateTime ObterInicioProximaSessaoIndividual()
     {
         var agora = DateTime.Now;
-        var inicioHoje = agora.Date.AddHours(15).AddMinutes(30);
+        var inicioHoje = agora.Date.AddHours(HoraSessaoIndividualTeste).AddMinutes(MinutoSessaoIndividualTeste);
         var fimHoje = inicioHoje.Add(DuracaoJanelaBilheteSessao);
 
         return agora > fimHoje

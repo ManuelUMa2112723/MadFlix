@@ -102,18 +102,29 @@
                         }
 
                         <div class="payment-actions">
-                            <button class="btn btn-outline-secondary"
-                                    type="button"
-                                    disabled="@pagamentoEmCurso"
-                                    @onclick="CancelarPagamento">
-                                Cancelar
-                            </button>
-                            <button class="btn btn-success"
-                                    type="button"
-                                    disabled="@(metodoSelecionado is null || pagamentoEmCurso || pagamentoConcluido)"
-                                    @onclick="ConfirmarPagamento">
-                                Confirmar pagamento
-                            </button>
+                            @if (pagamentoConcluido)
+                            {
+                                <button class="btn btn-success"
+                                        type="button"
+                                        @onclick="ContinuarDepoisPagamento">
+                                    Continuar
+                                </button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-outline-secondary"
+                                        type="button"
+                                        disabled="@pagamentoEmCurso"
+                                        @onclick="CancelarPagamento">
+                                    Cancelar
+                                </button>
+                                <button class="btn btn-success"
+                                        type="button"
+                                        disabled="@(metodoSelecionado is null || pagamentoEmCurso)"
+                                        @onclick="ConfirmarPagamento">
+                                    Confirmar pagamento
+                                </button>
+                            }
                         </div>
                     </section>
                 }
@@ -227,6 +238,11 @@
     private void CancelarPagamento()
     {
         ReiniciarPagamento();
+    }
+
+    private void ContinuarDepoisPagamento()
+    {
+        FecharCarrinho();
     }
 
     private async Task ConfirmarPagamento()

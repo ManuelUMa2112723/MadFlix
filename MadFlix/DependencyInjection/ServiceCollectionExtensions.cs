@@ -74,6 +74,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IFilmeCatalogService, FilmeCatalogService>();
         services.AddScoped<IFilmePurchaseService, FilmePurchaseService>();
         services.AddScoped<IFilmePlaybackService, FilmePlaybackService>();
+        services.AddScoped<IBilheteHistoricoService, BilheteHistoricoService>();
         services.AddScoped<IComentarioFilmeService, ComentarioFilmeService>();
 
         services.AddScoped<IFestivalCatalogService, FestivalCatalogService>();

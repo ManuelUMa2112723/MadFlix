@@ -21,6 +21,17 @@ public sealed class EfFilmeCompraRepository : IFilmeCompraRepository
                 cancellationToken);
     }
 
+    public async Task<IReadOnlyList<FilmeCompra>> ListarPorUtilizadorAsync(
+        int utilizadorId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.FilmeCompras
+            .Include(compra => compra.Filme)
+            .Where(compra => compra.UtilizadorId == utilizadorId)
+            .OrderByDescending(compra => compra.CompradoEmUtc)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<bool> TemAcessoValidoAsync(
         int utilizadorId,
         int filmeId,

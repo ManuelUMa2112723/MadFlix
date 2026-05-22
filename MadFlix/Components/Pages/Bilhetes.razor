@@ -1,0 +1,257 @@
+@page "/bilhetes"
+@rendermode InteractiveServer
+@using MadFlix.Models
+@using MadFlix.Models.Acessos
+@inject IBilheteHistoricoService BilheteHistoricoService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+<PageTitle>Bilhetes</PageTitle>
+
+<AuthorizeView Roles="User,Admin">
+    <Authorized>
+        <section class="tickets-page">
+            <div class="tickets-heading">
+                <h1>Bilhetes</h1>
+                <p>Historico dos acessos comprados nesta conta.</p>
+            </div>
+
+            @if (carregando)
+            {
+                <p>A carregar bilhetes...</p>
+            }
+            else
+            {
+                <div class="ticket-tabs" role="tablist" aria-label="Estado dos bilhetes">
+                    <button class="@ObterClasseTab(EstadoBilhetes.Ativos)"
+                            type="button"
+                            @onclick="() => estadoSelecionado = EstadoBilhetes.Ativos">
+                        Ativos (@historico.Ativos.Count)
+                    </button>
+                    <button class="@ObterClasseTab(EstadoBilhetes.Pendentes)"
+                            type="button"
+                            @onclick="() => estadoSelecionado = EstadoBilhetes.Pendentes">
+                        Pendentes (@historico.Pendentes.Count)
+                    </button>
+                    <button class="@ObterClasseTab(EstadoBilhetes.Expirados)"
+                            type="button"
+                            @onclick="() => estadoSelecionado = EstadoBilhetes.Expirados">
+                        Expirados (@historico.Expirados.Count)
+                    </button>
+                </div>
+
+                @if (ObterBilhetesSelecionados().Count == 0)
+                {
+                    <p class="tickets-empty">@ObterMensagemVazia()</p>
+                }
+                else
+                {
+                    <div class="ticket-list">
+                        @foreach (var bilhete in ObterBilhetesSelecionados())
+                        {
+                            <article class="ticket-card">
+                                <div>
+                                    <span class="ticket-kind">@ObterDescricaoTipo(bilhete.TipoAcesso)</span>
+                                    <h2>@(bilhete.Filme?.Titulo ?? "Filme")</h2>
+                                    <p>
+                                        @bilhete.InicioAcessoUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                        -
+                                        @bilhete.FimAcessoUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                    </p>
+                                    <small>Comprado em @bilhete.CompradoEmUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
+                                </div>
+
+                                @if (estadoSelecionado == EstadoBilhetes.Ativos)
+                                {
+                                    <button class="btn btn-light"
+                                            type="button"
+                                            @onclick="() => VerFilme(bilhete.FilmeId)">
+                                        Ver filme
+                                    </button>
+                                }
+                            </article>
+                        }
+                    </div>
+                }
+            }
+        </section>
+    </Authorized>
+    <NotAuthorized>
+        <div class="alert alert-warning">
+            Inicie sessao para ver o historico de bilhetes.
+        </div>
+        <a class="btn btn-primary" href="@GetLoginUrl()">Iniciar sessao</a>
+    </NotAuthorized>
+</AuthorizeView>
+
+<style>
+    .tickets-page {
+        margin: 1rem auto;
+        max-width: 980px;
+    }
+
+    .tickets-heading {
+        margin-bottom: 1.25rem;
+    }
+
+    .tickets-heading h1 {
+        font-size: 2.2rem;
+        margin: 0;
+    }
+
+    .tickets-heading p {
+        color: #e9eef7;
+        font-weight: 700;
+        margin: .35rem 0 0;
+    }
+
+    .ticket-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .5rem;
+        margin-bottom: 1rem;
+    }
+
+    .ticket-tab {
+        background: rgba(255, 255, 255, .12);
+        border: 1px solid rgba(255, 255, 255, .45);
+        border-radius: .4rem;
+        color: #ffffff;
+        font-weight: 700;
+        padding: .55rem .85rem;
+    }
+
+    .ticket-tab.active {
+        background: #ffffff;
+        color: #9f0f1a;
+    }
+
+    .ticket-list {
+        display: grid;
+        gap: .85rem;
+    }
+
+    .ticket-card {
+        align-items: center;
+        background: #ffffff;
+        border-radius: .5rem;
+        color: #101828;
+        display: flex;
+        gap: 1rem;
+        justify-content: space-between;
+        padding: 1rem;
+    }
+
+    .ticket-card h2 {
+        color: #7f0011;
+        font-size: 1.25rem;
+        margin: .2rem 0;
+    }
+
+    .ticket-card p,
+    .ticket-card small {
+        margin: 0;
+    }
+
+    .ticket-kind {
+        color: #667085;
+        font-size: .85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .tickets-empty {
+        color: #ffffff;
+        font-weight: 700;
+    }
+
+    @@media (max-width: 640px) {
+        .ticket-card {
+            align-items: stretch;
+            flex-direction: column;
+        }
+    }
+</style>
+
+@code {
+    private BilheteHistorico historico = new();
+    private EstadoBilhetes estadoSelecionado = EstadoBilhetes.Ativos;
+    private bool carregando = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var utilizadorId = await ObterUtilizadorIdAutenticado();
+
+        if (utilizadorId is null)
+        {
+            carregando = false;
+            return;
+        }
+
+        historico = await BilheteHistoricoService.ObterHistoricoAsync(utilizadorId.Value);
+        carregando = false;
+    }
+
+    private IReadOnlyList<FilmeCompra> ObterBilhetesSelecionados()
+    {
+        return estadoSelecionado switch
+        {
+            EstadoBilhetes.Pendentes => historico.Pendentes,
+            EstadoBilhetes.Expirados => historico.Expirados,
+            _ => historico.Ativos
+        };
+    }
+
+    private string ObterClasseTab(EstadoBilhetes estado)
+    {
+        return estadoSelecionado == estado
+            ? "ticket-tab active"
+            : "ticket-tab";
+    }
+
+    private string ObterMensagemVazia()
+    {
+        return estadoSelecionado switch
+        {
+            EstadoBilhetes.Pendentes => "Nao tem bilhetes pendentes.",
+            EstadoBilhetes.Expirados => "Nao tem bilhetes expirados.",
+            _ => "Nao tem bilhetes ativos neste momento."
+        };
+    }
+
+    private void VerFilme(int filmeId)
+    {
+        var returnUrl = Uri.EscapeDataString(NavigationManager.ToLocalPath());
+        NavigationManager.NavigateTo($"/filmes/{filmeId}/assistir?returnUrl={returnUrl}");
+    }
+
+    private async Task<int?> ObterUtilizadorIdAutenticado()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        return authState.User.GetMadFlixUserId();
+    }
+
+    private string GetLoginUrl()
+    {
+        return $"/login?returnUrl={Uri.EscapeDataString(NavigationManager.ToLocalPath())}";
+    }
+
+    private static string ObterDescricaoTipo(TipoAcesso tipo)
+    {
+        return tipo switch
+        {
+            TipoAcesso.BilheteSessao => "Bilhete de sessao",
+            TipoAcesso.PasseDiario => "Passe diario",
+            TipoAcesso.PasseCompleto => "Passe completo",
+            TipoAcesso.AluguerDigital => "Aluguer digital",
+            _ => "Acesso"
+        };
+    }
+
+    private enum EstadoBilhetes
+    {
+        Ativos,
+        Pendentes,
+        Expirados
+    }
+}
