@@ -273,6 +273,15 @@ namespace MadFlix.Migrations
                     b.Property<int>("FilmeId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime>("FimAcessoUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("InicioAcessoUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TipoAcesso")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("UtilizadorId")
                         .HasColumnType("INTEGER");
 
@@ -280,8 +289,7 @@ namespace MadFlix.Migrations
 
                     b.HasIndex("FilmeId");
 
-                    b.HasIndex("UtilizadorId", "FilmeId")
-                        .IsUnique();
+                    b.HasIndex("UtilizadorId", "FilmeId");
 
                     b.ToTable("FilmeCompras");
                 });

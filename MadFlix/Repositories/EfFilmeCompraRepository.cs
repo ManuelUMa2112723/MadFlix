@@ -21,6 +21,22 @@ public sealed class EfFilmeCompraRepository : IFilmeCompraRepository
                 cancellationToken);
     }
 
+    public async Task<bool> TemAcessoValidoAsync(
+        int utilizadorId,
+        int filmeId,
+        DateTime momentoUtc,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.FilmeCompras
+            .AnyAsync(
+                compra =>
+                    compra.UtilizadorId == utilizadorId &&
+                    compra.FilmeId == filmeId &&
+                    compra.InicioAcessoUtc <= momentoUtc &&
+                    compra.FimAcessoUtc >= momentoUtc,
+                cancellationToken);
+    }
+
     public async Task AddAsync(FilmeCompra compra, CancellationToken cancellationToken = default)
     {
         _context.FilmeCompras.Add(compra);

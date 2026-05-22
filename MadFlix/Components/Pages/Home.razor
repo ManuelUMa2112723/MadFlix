@@ -175,7 +175,6 @@
     ];
 
     private const decimal PrecoBilheteSessao = 6.99m;
-    private static readonly TimeOnly HoraSessaoEstatica = new(15, 30);
     private readonly List<Filme> filmesRecomendados = new();
     private string termoBusca = string.Empty;
     private string tipoBusca = "filme";
@@ -322,11 +321,9 @@
             return;
         }
 
-        var inicioSessao = DateTime.Today.Add(HoraSessaoEstatica.ToTimeSpan());
         var resultado = await CarrinhoService.AdicionarBilheteSessaoAsync(
             utilizadorId.Value,
             filmeSelecionado.Id,
-            inicioSessao,
             PrecoBilheteSessao);
 
         if (!resultado.Succeeded)

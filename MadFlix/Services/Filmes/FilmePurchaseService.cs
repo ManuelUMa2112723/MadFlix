@@ -1,5 +1,6 @@
 using MadFlix.Contracts.Common;
 using MadFlix.Models;
+using MadFlix.Models.Acessos;
 using MadFlix.Repositories;
 using MadFlix.Services.Notifications;
 
@@ -11,6 +12,7 @@ public sealed class FilmePurchaseService : IFilmePurchaseService
     private readonly IFilmeRepository _filmeRepository;
     private readonly IUserNotificationSubject _notificationSubject;
     private readonly IUtilizadorRepository _utilizadorRepository;
+    private static readonly TimeSpan DuracaoJanelaBilheteSessao = TimeSpan.FromHours(5);
 
     public FilmePurchaseService(
         IFilmeCompraRepository compraRepository,
@@ -43,25 +45,42 @@ public sealed class FilmePurchaseService : IFilmePurchaseService
             return ServiceResult<string>.Failure("Filme nao encontrado.");
         }
 
-        if (await _compraRepository.ExisteAsync(utilizadorId, filmeId, cancellationToken))
+        if (await _compraRepository.TemAcessoValidoAsync(utilizadorId, filmeId, DateTime.UtcNow, cancellationToken))
         {
-            return ServiceResult<string>.Success($"Ja comprou '{filme.Titulo}'.");
+            return ServiceResult<string>.Success($"Ja tem um bilhete de sessao valido para '{filme.Titulo}'.");
         }
+
+        var inicioSessao = ObterInicioProximaSessaoIndividual();
+        var fimSessao = inicioSessao.Add(DuracaoJanelaBilheteSessao);
 
         await _compraRepository.AddAsync(new FilmeCompra
         {
             UtilizadorId = utilizadorId,
             FilmeId = filmeId,
+            TipoAcesso = TipoAcesso.BilheteSessao,
+            InicioAcessoUtc = inicioSessao.ToUniversalTime(),
+            FimAcessoUtc = fimSessao.ToUniversalTime(),
             CompradoEmUtc = DateTime.UtcNow
         }, cancellationToken);
 
         await _notificationSubject.NotifyUserAsync(utilizadorId, new UserNotification
         {
             Titulo = "Compra confirmada",
-            Mensagem = $"Comprou '{filme.Titulo}' com sucesso.",
+            Mensagem = $"Comprou bilhete de sessao para '{filme.Titulo}' com sucesso.",
             Tipo = "compra"
         }, cancellationToken);
 
-        return ServiceResult<string>.Success($"Compra de '{filme.Titulo}' concluida.");
+        return ServiceResult<string>.Success($"Bilhete de sessao para '{filme.Titulo}' concluido.");
+    }
+
+    private static DateTime ObterInicioProximaSessaoIndividual()
+    {
+        var agora = DateTime.Now;
+        var inicioHoje = agora.Date.AddHours(15).AddMinutes(30);
+        var fimHoje = inicioHoje.Add(DuracaoJanelaBilheteSessao);
+
+        return agora > fimHoje
+            ? inicioHoje.AddDays(1)
+            : inicioHoje;
     }
 }

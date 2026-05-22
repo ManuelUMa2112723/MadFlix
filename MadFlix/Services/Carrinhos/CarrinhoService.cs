@@ -14,6 +14,7 @@ public sealed class CarrinhoService : ICarrinhoService
     private readonly IAcessoFactory _acessoFactory;
     private readonly ICarrinhoRepository _carrinhoRepository;
     private readonly IFilmeRepository _filmeRepository;
+    private readonly IFilmeCompraRepository _filmeCompraRepository;
     private readonly IFestivalRepository _festivalRepository;
     private readonly IUserNotificationSubject _notificationSubject;
     private readonly IUtilizadorRepository _utilizadorRepository;
@@ -24,6 +25,7 @@ public sealed class CarrinhoService : ICarrinhoService
         IAcessoFactory acessoFactory,
         ICarrinhoRepository carrinhoRepository,
         IFilmeRepository filmeRepository,
+        IFilmeCompraRepository filmeCompraRepository,
         IFestivalRepository festivalRepository,
         IUserNotificationSubject notificationSubject,
         IUtilizadorRepository utilizadorRepository)
@@ -31,6 +33,7 @@ public sealed class CarrinhoService : ICarrinhoService
         _acessoFactory = acessoFactory;
         _carrinhoRepository = carrinhoRepository;
         _filmeRepository = filmeRepository;
+        _filmeCompraRepository = filmeCompraRepository;
         _festivalRepository = festivalRepository;
         _notificationSubject = notificationSubject;
         _utilizadorRepository = utilizadorRepository;
@@ -114,7 +117,6 @@ public sealed class CarrinhoService : ICarrinhoService
     public async Task<ServiceResult<string>> AdicionarBilheteSessaoAsync(
         int utilizadorId,
         int filmeId,
-        DateTime inicioSessao,
         decimal preco,
         CancellationToken cancellationToken = default)
     {
@@ -128,6 +130,7 @@ public sealed class CarrinhoService : ICarrinhoService
         if (filme is null)
             return ServiceResult<string>.Failure("Filme nao encontrado.");
 
+        var inicioSessao = ObterInicioProximaSessaoIndividual();
         var fimSessao = inicioSessao.Add(DuracaoJanelaBilheteSessao);
         var pedido = new AcessoPedido
         {
@@ -164,6 +167,47 @@ public sealed class CarrinhoService : ICarrinhoService
         }, cancellationToken);
 
         return ServiceResult<string>.Success("Bilhete de sessao adicionado ao carrinho.");
+    }
+
+    public async Task<ServiceResult<string>> FinalizarBilhetesSessaoAsync(
+        int utilizadorId,
+        CancellationToken cancellationToken = default)
+    {
+        var carrinho = await _carrinhoRepository.GetByUtilizadorIdAsync(utilizadorId, cancellationToken);
+
+        if (carrinho is null)
+            return ServiceResult<string>.Failure("Carrinho nao encontrado.");
+
+        var bilhetesSessao = carrinho.Itens
+            .Where(item => item.TipoAcesso == TipoAcesso.BilheteSessao && item.FilmeId.HasValue)
+            .ToList();
+
+        if (bilhetesSessao.Count == 0)
+            return ServiceResult<string>.Success("Compra concluida. Nao existiam bilhetes de sessao para ativar.");
+
+        foreach (var item in bilhetesSessao)
+        {
+            await _filmeCompraRepository.AddAsync(new FilmeCompra
+            {
+                UtilizadorId = utilizadorId,
+                FilmeId = item.FilmeId!.Value,
+                TipoAcesso = TipoAcesso.BilheteSessao,
+                InicioAcessoUtc = item.InicioAcessoUtc,
+                FimAcessoUtc = item.FimAcessoUtc,
+                CompradoEmUtc = DateTime.UtcNow
+            }, cancellationToken);
+
+            await _carrinhoRepository.RemoveItemAsync(item, cancellationToken);
+        }
+
+        await _notificationSubject.NotifyUserAsync(utilizadorId, new UserNotification
+        {
+            Titulo = "Acesso ativado",
+            Mensagem = "Os seus bilhetes de sessao ja estao disponiveis.",
+            Tipo = "acesso"
+        }, cancellationToken);
+
+        return ServiceResult<string>.Success("Compra concluida. Bilhete(s) de sessao ativado(s).");
     }
 
     public async Task<ServiceResult<string>> RemoverItemAsync(
@@ -217,5 +261,16 @@ public sealed class CarrinhoService : ICarrinhoService
             TipoAcesso.BilheteSessao => "Bilhete de sessao",
             _ => "Acesso"
         };
+    }
+
+    private static DateTime ObterInicioProximaSessaoIndividual()
+    {
+        var agora = DateTime.Now;
+        var inicioHoje = agora.Date.AddHours(15).AddMinutes(30);
+        var fimHoje = inicioHoje.Add(DuracaoJanelaBilheteSessao);
+
+        return agora > fimHoje
+            ? inicioHoje.AddDays(1)
+            : inicioHoje;
     }
 }

@@ -8,6 +8,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 @inject IListaPessoalService ListaPessoalService
+@inject IFilmePlaybackService FilmePlaybackService
 
 <PageTitle>@(filme?.Titulo ?? "Filme")</PageTitle>
 
@@ -98,6 +99,18 @@ else if (filme is not null)
             {
                 <p class="movie-overview">@filme.Sinopse</p>
             }
+
+            <div class="movie-actions">
+                <button class="btn btn-light" type="button" disabled="@(!podeVerFilme)" @onclick="VerFilme">
+                    Ver filme
+                </button>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(mensagemAcessoFilme))
+            {
+                <div class="@classeMensagemAcessoFilme">@mensagemAcessoFilme</div>
+            }
+
             <AuthorizeView Roles="User,Admin">
                 <Authorized>
                     <div class="mt-3">
@@ -137,7 +150,7 @@ else if (filme is not null)
             @if (TemTrailer)
             {
                 <section class="movie-player">
-                    <h2>Ver filme</h2>
+                    <h2>Ver Trailer</h2>
 
                     @if (!string.IsNullOrWhiteSpace(trailerEmbedUrl))
                     {
@@ -149,7 +162,7 @@ else if (filme is not null)
                     else
                     {
                         <a class="btn btn-light" href="@filme.TrailerUrl" target="_blank" rel="noopener noreferrer">
-                            Ver filme
+                            Ver Trailer
                         </a>
                     }
                 </section>
@@ -235,11 +248,15 @@ else if (filme is not null)
                                     <small>@comentario.CriadoEmUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
                                 </div>
                                 <p>@comentario.Texto</p>
-                                <button class="btn btn-sm btn-danger"
-                                        type="button"
-                                        @onclick="() => RemoverComentario(comentario.Id)">
-                                    Remover
-                                </button>
+                                <AuthorizeView Roles="Admin">
+                                    <Authorized>
+                                        <button class="btn btn-sm btn-danger"
+                                                type="button"
+                                                @onclick="() => RemoverComentario(comentario.Id)">
+                                            Remover
+                                        </button>
+                                    </Authorized>
+                                </AuthorizeView>
                             </article>
                         }
                     </div>
@@ -306,6 +323,13 @@ else if (filme is not null)
         font-size: 1.05rem;
         line-height: 1.65;
         max-width: 760px;
+    }
+
+    .movie-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .75rem;
+        margin-top: 1rem;
     }
 
     .movie-player {
@@ -471,6 +495,9 @@ else if (filme is not null)
     private string? erro;
     private string? mensagemComentario;
     private string? erroComentario;
+    private bool podeVerFilme;
+    private string? mensagemAcessoFilme;
+    private string classeMensagemAcessoFilme = "alert alert-warning mt-2";
 
     private bool TemTrailer => !string.IsNullOrWhiteSpace(filme?.TrailerUrl);
 
@@ -507,6 +534,21 @@ else if (filme is not null)
             listas = (await ListaPessoalService.ListarAsync(utilizadorId.Value)).ToList();
             if (listas.Count > 0)
                 listaSelecionadaId = listas[0].Id;
+
+            var acesso = await FilmePlaybackService.PodeAssistirAsync(utilizadorId.Value, FilmeId);
+            podeVerFilme = acesso.Succeeded;
+            mensagemAcessoFilme = acesso.Succeeded
+                ? "Tem acesso valido para ver este filme."
+                : acesso.ErrorMessage;
+            classeMensagemAcessoFilme = acesso.Succeeded
+                ? "alert alert-success mt-2"
+                : "alert alert-warning mt-2";
+        }
+        else
+        {
+            podeVerFilme = false;
+            mensagemAcessoFilme = "Tem de iniciar sessao e ter um bilhete de sessao valido para ver o filme.";
+            classeMensagemAcessoFilme = "alert alert-warning mt-2";
         }
         carregando = false;
     }
@@ -571,7 +613,15 @@ else if (filme is not null)
         mensagemComentario = null;
         erroComentario = null;
 
-        var resultado = await ComentarioFilmeService.RemoverAsync(comentarioId);
+        var utilizadorId = await ObterUtilizadorIdAutenticado();
+
+        if (utilizadorId is null)
+        {
+            erroComentario = "Tem de iniciar sessao como administrador para remover comentarios.";
+            return;
+        }
+
+        var resultado = await ComentarioFilmeService.RemoverAsync(comentarioId, utilizadorId.Value);
 
         if (!resultado.Succeeded)
         {
@@ -592,6 +642,15 @@ else if (filme is not null)
     private void Voltar()
     {
         NavigationManager.NavigateTo(NavigationHelpers.NormalizeReturnUrl(ReturnUrl));
+    }
+
+    private void VerFilme()
+    {
+        if (!podeVerFilme)
+            return;
+
+        var returnUrl = Uri.EscapeDataString(NavigationManager.ToLocalPath());
+        NavigationManager.NavigateTo($"/filmes/{FilmeId}/assistir?returnUrl={returnUrl}");
     }
 
     private static string? ObterYoutubeEmbedUrl(string? trailerUrl)

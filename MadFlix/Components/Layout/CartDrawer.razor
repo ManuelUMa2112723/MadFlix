@@ -257,9 +257,29 @@
         }
 
         mensagemPagamento = stateContext.MensagemEstado;
-        mensagem = "Compra concluida com sucesso.";
+
+        var utilizadorId = await ObterUtilizadorIdAutenticado();
+
+        if (utilizadorId is null)
+        {
+            erro = "Tem de iniciar sessao para concluir a compra.";
+            pagamentoEmCurso = false;
+            return;
+        }
+
+        var resultado = await CarrinhoService.FinalizarBilhetesSessaoAsync(utilizadorId.Value);
+
+        if (!resultado.Succeeded)
+        {
+            erro = resultado.ErrorMessage;
+            pagamentoEmCurso = false;
+            return;
+        }
+
+        mensagem = resultado.Value;
         pagamentoConcluido = true;
         pagamentoEmCurso = false;
+        await CarregarCarrinho();
     }
 
     private void ReiniciarPagamento()

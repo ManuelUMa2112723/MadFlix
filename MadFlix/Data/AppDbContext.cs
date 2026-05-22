@@ -58,8 +58,7 @@ public class AppDbContext : DbContext
             .IsUnique();
 
         modelBuilder.Entity<FilmeCompra>()
-            .HasIndex(fc => new { fc.UtilizadorId, fc.FilmeId })
-            .IsUnique();
+            .HasIndex(fc => new { fc.UtilizadorId, fc.FilmeId });
 
         modelBuilder.Entity<FilmeCompra>()
             .HasOne(fc => fc.Utilizador)

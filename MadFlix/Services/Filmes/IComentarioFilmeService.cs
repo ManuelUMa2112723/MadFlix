@@ -18,5 +18,6 @@ public interface IComentarioFilmeService
 
     Task<ServiceResult<string>> RemoverAsync(
         int comentarioId,
+        int utilizadorId,
         CancellationToken cancellationToken = default);
 }

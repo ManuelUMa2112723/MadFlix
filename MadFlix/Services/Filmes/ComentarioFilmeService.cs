@@ -69,8 +69,17 @@ public sealed class ComentarioFilmeService : IComentarioFilmeService
 
     public async Task<ServiceResult<string>> RemoverAsync(
         int comentarioId,
+        int utilizadorId,
         CancellationToken cancellationToken = default)
     {
+        var utilizador = await _utilizadorRepository.GetByIdAsync(utilizadorId, cancellationToken);
+
+        if (utilizador is null)
+            return ServiceResult<string>.Failure("Utilizador nao encontrado.");
+
+        if (!utilizador.IsAdmin)
+            return ServiceResult<string>.Failure("Apenas administradores podem remover comentarios.");
+
         var comentario = await _comentarioRepository.GetByIdAsync(comentarioId, cancellationToken);
 
         if (comentario is null)

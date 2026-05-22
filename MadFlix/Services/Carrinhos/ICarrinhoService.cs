@@ -22,8 +22,11 @@ public interface ICarrinhoService
     Task<ServiceResult<string>> AdicionarBilheteSessaoAsync(
         int utilizadorId,
         int filmeId,
-        DateTime inicioSessao,
         decimal preco,
+        CancellationToken cancellationToken = default);
+
+    Task<ServiceResult<string>> FinalizarBilhetesSessaoAsync(
+        int utilizadorId,
         CancellationToken cancellationToken = default);
 
     Task<ServiceResult<string>> RemoverItemAsync(
