@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using MadFlix.Contracts.Auth;
 using MadFlix.Extensions;
 using MadFlix.Services.Auth;
@@ -12,6 +13,7 @@ public static class AuthEndpointRouteBuilderExtensions
         endpoints.MapPost("/auth/login", LoginAsync);
         endpoints.MapPost("/auth/register", RegisterAsync);
         endpoints.MapPost("/auth/logout", LogoutAsync);
+        endpoints.MapPost("/auth/change-password", ChangePasswordAsync).RequireAuthorization();
 
         return endpoints;
     }
@@ -67,6 +69,40 @@ public static class AuthEndpointRouteBuilderExtensions
     {
         await sessionService.SignOutAsync(httpContext);
         return Results.LocalRedirect(NavigationHelpers.NormalizeReturnUrl(request.ReturnUrl));
+    }
+
+    private static async Task<IResult> ChangePasswordAsync(
+        [FromForm] ChangePasswordRequest request,
+        IUserPasswordService passwordService,
+        HttpContext httpContext)
+    {
+        if (!httpContext.User.IsInRole("Admin"))
+        {
+            return Results.Json(new { error = "Apenas administradores podem alterar a password." }, statusCode: 403);
+        }
+
+        var idClaim = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(idClaim, out var utilizadorId))
+        {
+            return Results.Unauthorized();
+        }
+
+        if (request.Password != request.ConfirmarPassword)
+        {
+            return Results.BadRequest("As passwords nao coincidem.");
+        }
+
+        var result = await passwordService.ChangePasswordAsync(
+            utilizadorId,
+            request.CurrentPassword,
+            request.Password);
+
+        if (!result.Succeeded)
+        {
+            return Results.BadRequest(result.ErrorMessage ?? "Nao foi possivel alterar a password.");
+        }
+
+        return Results.Ok();
     }
 
     private static string BuildRedirect(string basePath, string error, string? returnUrl)

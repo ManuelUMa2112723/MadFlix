@@ -71,6 +71,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserRegistrationService, UserRegistrationService>();
         services.AddScoped<IUserClaimsPrincipalFactory, UserClaimsPrincipalFactory>();
         services.AddScoped<IUserSessionService, UserSessionService>();
+        services.AddScoped<IUserPasswordService, UserPasswordService>();
 
         services.AddScoped<IFilmeCatalogService, FilmeCatalogService>();
         services.AddScoped<IFilmePurchaseService, FilmePurchaseService>();

@@ -1,10 +1,12 @@
 @page "/perfil"
 @rendermode InteractiveServer
+@using System.Collections.Generic
 @using System.Security.Claims
 @using MadFlix.Models
 @using MadFlix.Services
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IListaPessoalService ListaPessoalService
+@inject IUserPasswordService PasswordService
 @inject NavigationManager NavigationManager
 
 <PageTitle>Perfil</PageTitle>
@@ -22,7 +24,37 @@
 
         <section class="border rounded p-3 mb-4">
             <h2 class="h4">Alterar password</h2>
-            <p class="text-muted">Em construcao...</p>
+
+            @if (isAdmin)
+            {
+                @if (!string.IsNullOrWhiteSpace(passwordMensagem))
+                {
+                    <div class="alert alert-success">@passwordMensagem</div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(passwordErro))
+                {
+                    <div class="alert alert-danger">@passwordErro</div>
+                }
+
+                <div class="mb-3">
+                    <label for="currentPassword" class="form-label">Password atual</label>
+                    <input id="currentPassword" class="form-control" type="password" @bind="currentPassword" />
+                </div>
+                <div class="mb-3">
+                    <label for="newPassword" class="form-label">Nova password</label>
+                    <input id="newPassword" class="form-control" type="password" minlength="6" @bind="newPassword" />
+                </div>
+                <div class="mb-3">
+                    <label for="confirmarPassword" class="form-label">Confirmar password</label>
+                    <input id="confirmarPassword" class="form-control" type="password" minlength="6" @bind="confirmarPassword" />
+                </div>
+                <button class="btn btn-primary" @onclick="AlterarPassword" disabled="@passwordChanging">Alterar password</button>
+            }
+            else
+            {
+                <p class="text-muted">Apenas administradores podem alterar a password.</p>
+            }
         </section>
 
         <section class="border rounded p-3 mb-4">
@@ -108,11 +140,19 @@
     private string? mensagem;
     private string? erro;
     private int utilizadorId;
+    private bool isAdmin;
+    private string currentPassword = string.Empty;
+    private string newPassword = string.Empty;
+    private string confirmarPassword = string.Empty;
+    private string? passwordMensagem;
+    private string? passwordErro;
+    private bool passwordChanging;
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var idClaim = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        isAdmin = authState.User.IsInRole("Admin");
 
         if (int.TryParse(idClaim, out var id))
         {
@@ -178,5 +218,65 @@
 
         mensagem = "Filme removido da lista.";
         await CarregarListas();
+    }
+
+    private async Task AlterarPassword()
+    {
+        passwordMensagem = null;
+        passwordErro = null;
+
+        if (!isAdmin)
+        {
+            passwordErro = "Apenas administradores podem alterar a password.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(currentPassword) || string.IsNullOrWhiteSpace(newPassword) || string.IsNullOrWhiteSpace(confirmarPassword))
+        {
+            passwordErro = "Preencha todos os campos.";
+            return;
+        }
+
+        if (newPassword.Length < 6)
+        {
+            passwordErro = "A password tem de ter pelo menos 6 caracteres.";
+            return;
+        }
+
+        if (newPassword != confirmarPassword)
+        {
+            passwordErro = "As passwords nao coincidem.";
+            return;
+        }
+
+        passwordChanging = true;
+
+        try
+        {
+            var result = await PasswordService.ChangePasswordAsync(
+                utilizadorId,
+                currentPassword,
+                newPassword);
+
+            if (!result.Succeeded)
+            {
+                passwordErro = result.ErrorMessage ?? "Nao foi possivel alterar a password.";
+            }
+            else
+            {
+                passwordMensagem = "Password alterada com sucesso.";
+                currentPassword = string.Empty;
+                newPassword = string.Empty;
+                confirmarPassword = string.Empty;
+            }
+        }
+        catch
+        {
+            passwordErro = "Erro ao tentar alterar a password.";
+        }
+        finally
+        {
+            passwordChanging = false;
+        }
     }
 }
