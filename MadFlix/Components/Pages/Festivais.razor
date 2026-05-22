@@ -16,18 +16,12 @@
     <h2 class="h4">Area do utilizador</h2>
     <p class="text-muted mb-3">Visualizacao simples dos festivais disponiveis.</p>
 
-    <button class="btn btn-light festival-user-button" @onclick="AlternarFestivaisDisponiveis">
-        @(mostrarListaUtilizador ? "Esconder festivais disponiveis" : "Ver festivais disponiveis")
-    </button>
-
     @if (!string.IsNullOrWhiteSpace(mensagemCarrinho))
     {
         <div class="alert alert-success mt-3">@mensagemCarrinho</div>
     }
 
-    @if (mostrarListaUtilizador)
-    {
-        <div class="mt-4">
+    <div class="mt-4">
             @if (carregando)
             {
                 <p>A carregar festivais...</p>
@@ -69,6 +63,9 @@
                                                 <option value="@TipoAcesso.PasseCompleto">Passe completo</option>
                                                 <option value="@TipoAcesso.AluguerDigital">Aluguer digital</option>
                                             </select>
+                                            <span class="festival-price">
+                                                @ObterPreco(compra.Tipo).ToString("C")
+                                            </span>
                                         </div>
 
                                         @if (compra.Tipo == TipoAcesso.PasseDiario)
@@ -167,7 +164,6 @@
                 <p>Ainda nao existem festivais disponiveis.</p>
             }
         </div>
-    }
 
 </section>
 
@@ -285,7 +281,6 @@
     private readonly HashSet<int> catalogosACarregar = new();
     private List<Festival> festivais = new();
     private bool mostrarFormulario;
-    private bool mostrarListaUtilizador;
     private bool carregando;
     private string? mensagem;
     private string? mensagemCarrinho;
@@ -309,20 +304,6 @@
     private void EsconderFormulario()
     {
         mostrarFormulario = false;
-    }
-
-    private async Task AlternarFestivaisDisponiveis()
-    {
-        mostrarListaUtilizador = !mostrarListaUtilizador;
-
-        if (!mostrarListaUtilizador)
-        {
-            catalogosAbertos.Clear();
-            catalogosACarregar.Clear();
-            return;
-        }
-
-        await CarregarFestivais();
     }
 
     private async Task CarregarFestivais()

@@ -60,6 +60,7 @@
                                         -
                                         @item.FimAcessoUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
                                     </small>
+                                    <strong>@item.Preco.ToString("C")</strong>
                                 </div>
                                 <button class="btn btn-sm btn-outline-danger"
                                         type="button"
@@ -132,6 +133,7 @@
                 @if (!mostrarPagamento)
                 {
                     <div class="cart-footer">
+                        <strong>Total: @ObterTotalCarrinho().ToString("C")</strong>
                         <button class="btn btn-outline-secondary" type="button" @onclick="FecharCarrinho">
                             Voltar atras
                         </button>

@@ -13,12 +13,19 @@
         border: 1px solid #ffffff;
     }
 
-    .festival-user-button:hover,
-    .festival-user-button:focus {
-        color: #78000f;
-        background: #f8f9fa;
-        border-color: #ffffff;
-    }
+.festival-user-button:hover,
+.festival-user-button:focus {
+    color: #78000f;
+    background: #f8f9fa;
+    border-color: #ffffff;
+}
+
+.festival-price {
+    color: #166534;
+    display: inline-block;
+    font-weight: 800;
+    margin-top: .35rem;
+}
 
 .festival-session-list {
     display: flex;
