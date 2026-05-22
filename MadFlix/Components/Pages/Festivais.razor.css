@@ -1,47 +1,225 @@
-.festival-movie-card {
-        cursor: pointer;
-        transition: border-color .15s ease, box-shadow .15s ease;
-    }
+.festivals-hero,
+.festival-panel {
+    border-radius: 8px;
+    margin: 0 auto 1.25rem;
+    max-width: 1180px;
+}
 
-    .festival-movie-card:hover {
-        border-color: #9aa4b2 !important;
-        box-shadow: 0 8px 20px rgba(15, 23, 42, .08);
-    }
+.festivals-hero {
+    padding: clamp(1.5rem, 4vw, 3rem) 0 0.75rem;
+}
 
-    .festival-user-button {
-        color: #9f0f1a;
-        border: 1px solid #ffffff;
-    }
+.festival-kicker {
+    color: #f4c95d;
+    font-size: 0.76rem;
+    font-weight: 900;
+    margin: 0 0 0.35rem;
+    text-transform: uppercase;
+}
 
-.festival-user-button:hover,
-.festival-user-button:focus {
-    color: #78000f;
-    background: #f8f9fa;
-    border-color: #ffffff;
+.festivals-hero h1 {
+    color: #ffffff;
+    font-size: clamp(3rem, 8vw, 6rem);
+    line-height: 0.9;
+    margin: 0;
+}
+
+.festivals-hero p:last-child,
+.festival-intro,
+.festival-muted {
+    color: #d8dce5;
+    font-family: Inter, Arial, sans-serif;
+    font-weight: 700;
+    line-height: 1.55;
+}
+
+.festivals-hero p:last-child {
+    font-size: 1rem;
+    margin: 0.85rem 0 0;
+    max-width: 680px;
+}
+
+.festival-panel {
+    background: rgba(17, 24, 39, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.24);
+    padding: clamp(1rem, 2.5vw, 1.35rem);
+}
+
+.festival-panel h2 {
+    color: #ffffff;
+    font-size: clamp(1.45rem, 2.7vw, 2.25rem);
+    line-height: 1.08;
+    margin: 0 0 0.55rem;
+}
+
+.festival-content {
+    margin-top: 1.5rem;
+}
+
+.festival-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.festival-card {
+    background: #f5f1e8;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 8px;
+    color: #111827;
+    overflow: hidden;
+    padding: clamp(1rem, 2vw, 1.25rem);
+}
+
+.festival-card-grid {
+    align-items: start;
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: minmax(260px, 0.9fr) minmax(360px, 1.1fr);
+}
+
+.festival-summary {
+    min-width: 0;
+}
+
+.festival-label {
+    background: #111827;
+    border-radius: 999px;
+    color: #f4c95d;
+    display: inline-flex;
+    font-family: Inter, Arial, sans-serif;
+    font-size: 0.74rem;
+    font-weight: 900;
+    margin-bottom: 0.75rem;
+    padding: 0.3rem 0.65rem;
+    text-transform: uppercase;
+}
+
+.festival-summary h3 {
+    color: #111827;
+    font-size: clamp(1.35rem, 2.6vw, 2rem);
+    line-height: 1.05;
+    margin: 0 0 0.5rem;
+    overflow-wrap: anywhere;
+}
+
+.festival-date,
+.festival-description {
+    color: #4b5563;
+    font-family: Inter, Arial, sans-serif;
+    font-weight: 700;
+    line-height: 1.55;
+    margin: 0 0 0.45rem;
+}
+
+.festival-catalog-button,
+.festival-login-button {
+    border-radius: 8px;
+    font-family: Inter, Arial, sans-serif;
+    font-weight: 900;
+    min-height: 2.5rem;
+}
+
+.festival-catalog-button {
+    background: #ffffff;
+    border: 1px solid #cfc5b4;
+    color: #111827;
+    margin-top: 0.75rem;
+}
+
+.festival-catalog-button:hover,
+.festival-catalog-button:focus {
+    background: #111827;
+    border-color: #111827;
+    color: #ffffff;
+}
+
+.festival-purchase-grid {
+    align-items: start;
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: minmax(170px, 1fr) minmax(150px, 0.8fr) minmax(150px, 0.7fr);
+}
+
+.festival-card .form-label {
+    color: #111827;
+    font-size: 0.85rem;
+    font-weight: 900;
+    margin-bottom: 0.35rem;
+}
+
+.festival-card .form-select,
+.festival-card .form-control {
+    border-color: #d7cebd;
+    border-radius: 8px;
+    color: #111827;
+    font-family: Inter, Arial, sans-serif;
+    font-weight: 800;
+    min-height: 2.75rem;
 }
 
 .festival-price {
     color: #166534;
     display: inline-block;
-    font-weight: 800;
-    margin-top: .35rem;
+    font-family: Inter, Arial, sans-serif;
+    font-size: clamp(1.55rem, 2.6vw, 2.15rem);
+    font-weight: 900;
+    line-height: 1;
+    margin: 0 0 0.7rem;
+    text-align: center;
+}
+
+.festival-cart-cell {
+    align-self: start;
+    display: grid;
+    justify-items: stretch;
+}
+
+.festival-cart-button,
+.festival-login-button {
+    align-items: center;
+    display: inline-flex;
+    justify-content: center;
+    min-height: 4rem;
+    padding: 0.8rem 1rem;
+    white-space: normal;
+}
+
+.festival-cart-button {
+    background: #16885b;
+    border: 1px solid #16885b;
+    color: #ffffff;
+}
+
+.festival-cart-button:hover,
+.festival-cart-button:focus {
+    background: #106b47;
+    border-color: #106b47;
+    color: #ffffff;
+}
+
+.festival-login-button {
+    background: #111827;
+    border: 1px solid #111827;
+    color: #ffffff !important;
 }
 
 .festival-session-list {
     display: flex;
     flex-wrap: wrap;
-    gap: .5rem;
+    gap: 0.5rem;
 }
 
 .session-state {
     align-items: center;
-    border-radius: .45rem;
+    border-radius: 8px;
     display: inline-flex;
     flex-wrap: wrap;
-    gap: .35rem;
-    font-size: .88rem;
-    font-weight: 700;
-    padding: .45rem .65rem;
+    gap: 0.35rem;
+    font-family: Inter, Arial, sans-serif;
+    font-size: 0.86rem;
+    font-weight: 900;
+    padding: 0.5rem 0.7rem;
 }
 
 .session-state em {
@@ -58,4 +236,75 @@
     background: #fee2e2;
     border: 1px solid #ef4444;
     color: #991b1b;
+}
+
+.festival-catalog {
+    border-top: 1px solid #ddd3c3;
+    margin-top: 1rem;
+    padding-top: 1rem;
+}
+
+.festival-catalog .festival-muted {
+    color: #5b6472;
+}
+
+.festival-movie-grid {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+}
+
+.festival-movie-card {
+    background: #ffffff;
+    border: 1px solid #ddd3c3;
+    border-radius: 8px;
+    color: #111827;
+    cursor: pointer;
+    display: grid;
+    gap: 0.25rem;
+    padding: 0.9rem;
+    text-align: left;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.festival-movie-card:hover,
+.festival-movie-card:focus {
+    border-color: #f4c95d;
+    box-shadow: 0 12px 28px rgba(17, 24, 39, 0.16);
+    transform: translateY(-2px);
+}
+
+.festival-movie-card strong {
+    color: #111827;
+}
+
+.festival-movie-card span,
+.festival-movie-card small {
+    color: #5b6472;
+    font-family: Inter, Arial, sans-serif;
+    font-weight: 700;
+}
+
+.festival-user-button {
+    color: #9f0f1a;
+    border: 1px solid #ffffff;
+}
+
+.festival-user-button:hover,
+.festival-user-button:focus {
+    color: #78000f;
+    background: #f8f9fa;
+    border-color: #ffffff;
+}
+
+@media (max-width: 980px) {
+    .festival-card-grid,
+    .festival-purchase-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .festival-cart-button,
+    .festival-login-button {
+        min-height: 2.85rem;
+    }
 }

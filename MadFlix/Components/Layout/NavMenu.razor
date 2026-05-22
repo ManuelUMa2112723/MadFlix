@@ -16,9 +16,6 @@
             </NavLink>
             <AuthorizeView Roles="User,Admin">
                 <Authorized>
-                    <NavLink class="nav-link" href="perfil">
-                        Perfil
-                    </NavLink>
                     <NavLink class="nav-link" href="bilhetes">
                         Bilhetes
                     </NavLink>
@@ -27,17 +24,44 @@
         </nav>
 
         <div class="nav-actions">
+            <UserNotifications />
+            <CartDrawer />
+
             <AuthorizeView>
                 <Authorized Context="authState">
-                    <span class="nav-user">Ola, @authState.User.Identity?.Name</span>
+                    <details class="profile-menu">
+                        <summary class="profile-avatar-button"
+                                 title="@($"Perfil de {authState.User.Identity?.Name}")"
+                                 aria-label="@($"Abrir menu de perfil de {authState.User.Identity?.Name}")">
+                            <span class="profile-avatar" aria-hidden="true">
+                                @GetUserInitials(authState.User.Identity?.Name)
+                            </span>
+                        </summary>
 
-                    <form class="logout-form" method="post" action="/auth/logout">
-                        <AntiforgeryToken />
-                        <input type="hidden" name="returnUrl" value="@NavigationManager.ToLocalPath()" />
-                        <button class="nav-link" type="submit">
-                            <span class="bi bi-box-arrow-right-nav-menu" aria-hidden="true"></span> Terminar sessao
-                        </button>
-                    </form>
+                        <div class="profile-dropdown">
+                            <div class="profile-dropdown-header">
+                                <span class="profile-avatar profile-avatar-small" aria-hidden="true">
+                                    @GetUserInitials(authState.User.Identity?.Name)
+                                </span>
+                                <div>
+                                    <strong>@authState.User.Identity?.Name</strong>
+                                    <span>Conta MadFlix</span>
+                                </div>
+                            </div>
+
+                            <a class="profile-dropdown-item" href="perfil">
+                                Minha conta
+                            </a>
+
+                            <form class="logout-form profile-dropdown-form" method="post" action="/auth/logout">
+                                <AntiforgeryToken />
+                                <input type="hidden" name="returnUrl" value="@NavigationManager.ToLocalPath()" />
+                                <button class="profile-dropdown-item profile-dropdown-button" type="submit">
+                                    Terminar sessao
+                                </button>
+                            </form>
+                        </div>
+                    </details>
                 </Authorized>
                 <NotAuthorized>
                     <NavLink class="nav-link" href="@GetLoginUrl()">
@@ -62,5 +86,22 @@
     private string GetRegisterUrl()
     {
         return $"/registar?returnUrl={Uri.EscapeDataString(NavigationManager.ToLocalPath())}";
+    }
+
+    private static string GetUserInitials(string? userName)
+    {
+        if (string.IsNullOrWhiteSpace(userName))
+            return "U";
+
+        var parts = userName
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        if (parts.Length == 0)
+            return "U";
+
+        if (parts.Length == 1)
+            return parts[0][0].ToString().ToUpperInvariant();
+
+        return $"{parts[0][0]}{parts[^1][0]}".ToUpperInvariant();
     }
 }

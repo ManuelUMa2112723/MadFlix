@@ -1,8 +1,9 @@
 .notification-panel {
-    display: flex;
     gap: 0.75rem;
     align-items: center;
+    display: flex;
     flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
 .notification-item {

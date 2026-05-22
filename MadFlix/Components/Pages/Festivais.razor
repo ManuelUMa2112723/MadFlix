@@ -10,52 +10,55 @@
 
 <PageTitle>Festivais</PageTitle>
 
-<h1>Festivais</h1>
+<section class="festivals-hero" aria-labelledby="festivals-title">
+    <p class="festival-kicker">Programacao MadFlix</p>
+    <h1 id="festivals-title">Festivais</h1>
+    <p>Escolhe o tipo de acesso, consulta sessoes e adiciona passes ao carrinho sem sair da pagina.</p>
+</section>
 
-<section class="border rounded p-3 mb-4">
-    <h2 class="h4">Area do utilizador</h2>
-    <p class="text-muted mb-3">Visualizacao simples dos festivais disponiveis.</p>
+<section class="festival-panel">
+    <h2>Area do utilizador</h2>
+    <p class="festival-intro mb-3">Visualizacao simples dos festivais disponiveis.</p>
 
     @if (!string.IsNullOrWhiteSpace(mensagemCarrinho))
     {
         <div class="alert alert-success mt-3">@mensagemCarrinho</div>
     }
 
-    <div class="mt-4">
+    <div class="festival-content">
             @if (carregando)
             {
-                <p>A carregar festivais...</p>
+                <p class="festival-muted">A carregar festivais...</p>
             }
             else if (festivais.Count > 0)
             {
-                <div class="list-group">
+                <div class="festival-list">
                     @foreach (var festival in festivais)
                     {
                         var compra = ObterCompraFestival(festival);
 
-                        <div class="list-group-item">
-                            <div class="row g-3 align-items-end">
-                                <div class="col-lg-7">
-                                    <h3 class="h5 mb-1">@festival.Nome</h3>
-                                    <p class="mb-1"><strong>Genero:</strong> @festival.Genero</p>
-                                    <p class="mb-1">
-                                        <strong>Datas:</strong>
-                                        @festival.DataInicio.ToShortDateString() - @festival.DataFim.ToShortDateString()
+                        <article class="festival-card">
+                            <div class="festival-card-grid">
+                                <div class="festival-summary">
+                                    <span class="festival-label">@festival.Genero</span>
+                                    <h3>@festival.Nome</h3>
+                                    <p class="festival-date">
+                                        @festival.DataInicio.ToString("dd/MM/yyyy") - @festival.DataFim.ToString("dd/MM/yyyy")
                                     </p>
                                     @if (!string.IsNullOrWhiteSpace(festival.Descricao))
                                     {
-                                        <p class="mb-0">@festival.Descricao</p>
+                                        <p class="festival-description">@festival.Descricao</p>
                                     }
 
-                                    <button class="btn btn-sm btn-outline-secondary mt-3" type="button"
+                                    <button class="btn festival-catalog-button" type="button"
                                             @onclick="() => AlternarCatalogoFestival(festival.Id)">
                                         @ObterTextoBotaoCatalogo(festival.Id)
                                     </button>
                                 </div>
 
-                                <div class="col-lg-5">
-                                    <div class="row g-2">
-                                        <div class="col-md-5">
+                                <div class="festival-purchase">
+                                    <div class="festival-purchase-grid">
+                                        <div>
                                             <label class="form-label" for="@($"tipo-acesso-{festival.Id}")">Tipo de acesso</label>
                                             <select id="@($"tipo-acesso-{festival.Id}")" class="form-select" value="@compra.Tipo"
                                                     @onchange="e => AlterarTipoAcesso(festival.Id, e.Value?.ToString())">
@@ -63,14 +66,11 @@
                                                 <option value="@TipoAcesso.PasseCompleto">Passe completo</option>
                                                 <option value="@TipoAcesso.AluguerDigital">Aluguer digital</option>
                                             </select>
-                                            <span class="festival-price">
-                                                @ObterPreco(compra.Tipo).ToString("C")
-                                            </span>
                                         </div>
 
                                         @if (compra.Tipo == TipoAcesso.PasseDiario)
                                         {
-                                            <div class="col-md-4">
+                                            <div>
                                                 <label class="form-label" for="@($"dia-acesso-{festival.Id}")">Dia</label>
                                                 <input id="@($"dia-acesso-{festival.Id}")" class="form-control" type="date"
                                                        min="@festival.DataInicio.ToString("yyyy-MM-dd")"
@@ -81,7 +81,7 @@
                                         }
                                         else if (compra.Tipo == TipoAcesso.AluguerDigital)
                                         {
-                                            <div class="col-md-4">
+                                            <div>
                                                 <label class="form-label" for="@($"horas-aluguer-{festival.Id}")">Horas</label>
                                                 <input id="@($"horas-aluguer-{festival.Id}")" class="form-control" type="number" min="1"
                                                        value="@compra.HorasAluguer"
@@ -91,15 +91,21 @@
 
                                         <AuthorizeView>
                                             <Authorized>
-                                                <div class="col-md-3 d-grid">
-                                                    <button class="btn btn-success" @onclick="() => AdicionarAoCarrinho(festival)">
+                                                <div class="festival-cart-cell">
+                                                    <span class="festival-price">
+                                                        @ObterPreco(compra.Tipo).ToString("C")
+                                                    </span>
+                                                    <button class="btn festival-cart-button" @onclick="() => AdicionarAoCarrinho(festival)">
                                                         Adicionar ao carrinho
                                                     </button>
                                                 </div>
                                             </Authorized>
                                             <NotAuthorized>
-                                                <div class="col-md-3 d-grid">
-                                                    <a class="btn btn-outline-primary" href="@GetLoginUrl()">
+                                                <div class="festival-cart-cell">
+                                                    <span class="festival-price">
+                                                        @ObterPreco(compra.Tipo).ToString("C")
+                                                    </span>
+                                                    <a class="btn festival-login-button" href="@GetLoginUrl()">
                                                         Iniciar sessao
                                                     </a>
                                                 </div>
@@ -127,41 +133,39 @@
 
                             @if (catalogosAbertos.Contains(festival.Id))
                             {
-                                <div class="border-top mt-3 pt-3">
+                                <div class="festival-catalog">
                                     @if (catalogosACarregar.Contains(festival.Id))
                                     {
-                                        <p class="text-muted mb-0">A carregar catalogo...</p>
+                                        <p class="festival-muted mb-0">A carregar catalogo...</p>
                                     }
                                     else if (filmesPorFestival.TryGetValue(festival.Id, out var filmesFestival) && filmesFestival.Count
                     > 0)
                                     {
-                                        <div class="row g-3">
+                                        <div class="festival-movie-grid">
                                             @foreach (var filmeFestival in filmesFestival)
                                             {
-                                                <div class="col-md-6 col-xl-4">
-                                                    <div class="border rounded p-3 h-100 festival-movie-card"
-                                                         @onclick="() => AbrirDetalhesFilme(filmeFestival.Id)">
-                                                        <strong>@filmeFestival.Titulo</strong>
-                                                        <p class="text-muted mb-1">@filmeFestival.Genero</p>
-                                                        <small>@filmeFestival.Ano</small>
-                                                    </div>
-                                                </div>
+                                                <button class="festival-movie-card" type="button"
+                                                        @onclick="() => AbrirDetalhesFilme(filmeFestival.Id)">
+                                                    <strong>@filmeFestival.Titulo</strong>
+                                                    <span>@filmeFestival.Genero</span>
+                                                    <small>@filmeFestival.Ano</small>
+                                                </button>
                                             }
                                         </div>
                                     }
                                     else
                                     {
-                                        <p class="text-muted mb-0">Este festival ainda nao tem filmes no catalogo.</p>
+                                        <p class="festival-muted mb-0">Este festival ainda nao tem filmes no catalogo.</p>
                                     }
                                 </div>
                             }
-                        </div>
+                        </article>
                     }
                 </div>
             }
             else
             {
-                <p>Ainda nao existem festivais disponiveis.</p>
+                <p class="festival-muted">Ainda nao existem festivais disponiveis.</p>
             }
         </div>
 

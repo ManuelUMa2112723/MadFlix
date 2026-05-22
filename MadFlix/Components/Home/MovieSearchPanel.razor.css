@@ -1,0 +1,120 @@
+.search-panel {
+    background: #f5f1e8;
+    border-radius: 8px;
+    color: #12151f;
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: minmax(220px, 0.42fr) 1fr;
+    margin: 0 auto 2rem;
+    max-width: 1180px;
+    padding: clamp(1rem, 2.5vw, 1.35rem);
+}
+
+.search-heading h2 {
+    font-size: clamp(1.45rem, 2.4vw, 2.25rem);
+    line-height: 1.05;
+    margin: 0;
+}
+
+.section-kicker {
+    color: #a33737;
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    margin: 0 0 0.45rem;
+    text-transform: uppercase;
+}
+
+.search-controls {
+    align-items: center;
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: auto minmax(200px, 1fr) auto;
+}
+
+.segmented-control {
+    background: #e8e0d2;
+    border-radius: 8px;
+    display: inline-grid;
+    grid-template-columns: repeat(2, 1fr);
+    padding: 0.25rem;
+}
+
+.segment {
+    align-items: center;
+    border-radius: 6px;
+    color: #4b5563;
+    cursor: pointer;
+    display: inline-flex;
+    font-family: Inter, Arial, sans-serif;
+    font-size: 0.9rem;
+    font-weight: 800;
+    justify-content: center;
+    min-height: 2.65rem;
+    padding: 0 0.9rem;
+}
+
+.segment.active {
+    background: #111827;
+    color: #ffffff;
+}
+
+.segment input {
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    width: 1px;
+}
+
+.search-field {
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #d7cebd;
+    border-radius: 8px;
+    display: flex;
+    gap: 0.55rem;
+    min-height: 3.15rem;
+    padding: 0 0.95rem;
+}
+
+.search-field span {
+    color: #a33737;
+    font-size: 1.35rem;
+    line-height: 1;
+}
+
+.search-field input {
+    background: transparent;
+    border: 0;
+    color: #12151f;
+    flex: 1;
+    font-family: Inter, Arial, sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    min-width: 0;
+    outline: 0;
+}
+
+.search-button {
+    background: #e50914;
+    border: 1px solid #e50914;
+    border-radius: 8px;
+    color: #fff;
+    font-weight: 800;
+    min-height: 3.15rem;
+    padding: 0 1.2rem;
+}
+
+.search-button:disabled {
+    background: #8f98a8;
+    border-color: #8f98a8;
+}
+
+@media (max-width: 900px) {
+    .search-panel,
+    .search-controls {
+        grid-template-columns: 1fr;
+    }
+}
+

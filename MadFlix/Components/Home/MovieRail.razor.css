@@ -1,0 +1,174 @@
+.movie-rail {
+    margin: 0 auto 2rem;
+    max-width: 1180px;
+}
+
+.section-heading {
+    align-items: end;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.section-kicker {
+    color: #f4c95d;
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    margin: 0 0 0.45rem;
+    text-transform: uppercase;
+}
+
+.section-heading h2 {
+    color: #fff;
+    font-size: clamp(1.7rem, 3vw, 2.65rem);
+    line-height: 1.05;
+    margin: 0;
+}
+
+.section-link {
+    color: #f4c95d !important;
+    font-size: 0.9rem;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.movie-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+}
+
+.movie-card {
+    background: #f5f1e8;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: #12151f;
+    overflow: hidden;
+    transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+}
+
+.movie-card:hover {
+    border-color: rgba(244, 201, 93, 0.8);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+    transform: translateY(-4px);
+}
+
+.movie-poster {
+    aspect-ratio: 2 / 3;
+    background: #111827;
+    overflow: hidden;
+    position: relative;
+}
+
+.movie-poster img,
+.poster-fallback {
+    height: 100%;
+    object-fit: cover;
+    width: 100%;
+}
+
+.poster-fallback {
+    align-items: center;
+    background: linear-gradient(135deg, #e50914, #0e7c7b);
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    padding: 1rem;
+    text-align: center;
+}
+
+.rating-pill {
+    background: rgba(17, 24, 39, 0.84);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 999px;
+    color: #fff;
+    font-family: Inter, Arial, sans-serif;
+    font-size: 0.72rem;
+    font-weight: 800;
+    left: 0.65rem;
+    padding: 0.28rem 0.55rem;
+    position: absolute;
+    top: 0.65rem;
+}
+
+.movie-card-body {
+    padding: 0.85rem;
+}
+
+.movie-card-body h3 {
+    color: #12151f;
+    font-size: 1rem;
+    line-height: 1.2;
+    margin: 0 0 0.4rem;
+}
+
+.movie-card-body p,
+.movie-card-body small {
+    color: #5b6472;
+    display: block;
+    font-family: Inter, Arial, sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    line-height: 1.35;
+    margin: 0 0 0.5rem;
+}
+
+.btn-card-action {
+    background: #111827;
+    border: 1px solid #111827;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 800;
+    margin-top: 0.35rem;
+    min-height: 2.35rem;
+    width: 100%;
+}
+
+.btn-card-action:disabled {
+    opacity: 0.45;
+}
+
+.loading-strip {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.loading-strip span {
+    aspect-ratio: 2 / 3;
+    background: linear-gradient(90deg, #1a2030, #293144, #1a2030);
+    border-radius: 8px;
+}
+
+.empty-state {
+    background: #f5f1e8;
+    border-radius: 8px;
+    color: #12151f;
+    display: grid;
+    gap: 0.35rem;
+    padding: 1rem;
+}
+
+.empty-state span {
+    font-family: Inter, Arial, sans-serif;
+    font-weight: 600;
+}
+
+.clickable-movie {
+    cursor: pointer;
+}
+
+@media (max-width: 640px) {
+    .section-heading {
+        align-items: start;
+        flex-direction: column;
+    }
+
+    .loading-strip {
+        grid-template-columns: 1fr;
+    }
+}
+

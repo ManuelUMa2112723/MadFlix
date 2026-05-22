@@ -1,0 +1,80 @@
+@if (Movie is not null)
+{
+    <section class="spotlight" aria-labelledby="spotlight-title">
+        <div class="spotlight-media clickable-movie" @onclick="() => MovieSelected.InvokeAsync(Movie.Id)">
+            @if (!string.IsNullOrWhiteSpace(Movie.Poster) && Movie.Poster != "N/A")
+            {
+                <img src="@Movie.Poster" alt="@Movie.Titulo" />
+            }
+            else
+            {
+                <div class="poster-fallback">@Movie.Titulo</div>
+            }
+        </div>
+
+        <div class="spotlight-copy">
+            <p class="section-kicker">Resultado em destaque</p>
+            <h2 id="spotlight-title" class="clickable-movie" @onclick="() => MovieSelected.InvokeAsync(Movie.Id)">
+                @Movie.Titulo <span>@Movie.Ano</span>
+            </h2>
+            <p class="spotlight-synopsis">@Movie.Sinopse</p>
+
+            <div class="metadata-grid">
+                <div>
+                    <span>Genero</span>
+                    <strong>@Display(Movie.Genero)</strong>
+                </div>
+                <div>
+                    <span>IMDb</span>
+                    <strong>@(Movie.ImdbRating?.ToString("0.0") ?? "N/A")</strong>
+                </div>
+                <div>
+                    <span>Duracao</span>
+                    <strong>@Display(Movie.Runtime)</strong>
+                </div>
+                <div>
+                    <span>Classificacao</span>
+                    <strong>@Display(Movie.Rated)</strong>
+                </div>
+            </div>
+
+            <div class="spotlight-actions">
+                <button class="btn btn-action btn-buy" @onclick="BuyRequested" disabled="@(!IsAuthenticated)">
+                    Comprar
+                </button>
+                <button class="btn btn-action btn-ticket" @onclick="TicketRequested" disabled="@(!IsAuthenticated)">
+                    Bilhete sessao
+                </button>
+                <button class="btn btn-action btn-watch" @onclick="WatchRequested" disabled="@(!IsAuthenticated)">
+                    Assistir
+                </button>
+            </div>
+
+            @if (!IsAuthenticated)
+            {
+                <div class="guest-callout">
+                    <span>Modo visitante</span>
+                    <p>Inicia sessao para comprar bilhetes, assistir e guardar historico.</p>
+                    <div>
+                        <a class="btn btn-sm btn-auth-primary" href="@LoginUrl">Iniciar sessao</a>
+                        <a class="btn btn-sm btn-auth-secondary" href="@RegisterUrl">Criar conta</a>
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter, EditorRequired] public Filme? Movie { get; set; }
+    [Parameter] public bool IsAuthenticated { get; set; }
+    [Parameter] public string LoginUrl { get; set; } = "/login";
+    [Parameter] public string RegisterUrl { get; set; } = "/registar";
+    [Parameter] public EventCallback BuyRequested { get; set; }
+    [Parameter] public EventCallback TicketRequested { get; set; }
+    [Parameter] public EventCallback WatchRequested { get; set; }
+    [Parameter] public EventCallback<int> MovieSelected { get; set; }
+
+    private static string Display(string? value) => string.IsNullOrWhiteSpace(value) ? "N/A" : value;
+}
+

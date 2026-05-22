@@ -9,7 +9,11 @@
 <AuthorizeView>
     <Authorized>
         <button class="cart-button" type="button" title="Carrinho" @onclick="AbrirCarrinho">
-            <span aria-hidden="true">🛒</span>
+            <svg class="cart-icon" aria-hidden="true" viewBox="0 0 24 24">
+                <path d="M6.2 6.5h14.1l-1.6 7.1a2 2 0 0 1-2 1.6H9.3a2 2 0 0 1-2-1.6L5.5 3.8H3.2" />
+                <path d="M9.2 19.5h.1" />
+                <path d="M17.2 19.5h.1" />
+            </svg>
             @if (itens.Count > 0)
             {
                 <span class="cart-count">@itens.Count</span>

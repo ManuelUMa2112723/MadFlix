@@ -1,0 +1,241 @@
+.tickets-page {
+    margin: 0 auto 2rem;
+    max-width: 1180px;
+    padding-top: clamp(1.5rem, 4vw, 3rem);
+}
+
+.tickets-heading {
+    margin-bottom: 1.5rem;
+}
+
+.tickets-heading h1 {
+    color: #ffffff;
+    font-size: clamp(3rem, 7vw, 5.6rem);
+    line-height: 0.9;
+    margin: 0;
+}
+
+.tickets-heading p {
+    color: #d8dce5;
+    font-family: Inter, Arial, sans-serif;
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1.55;
+    margin: 0.85rem 0 0;
+}
+
+.ticket-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    margin-bottom: 1.25rem;
+}
+
+.ticket-tab {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 8px;
+    color: #ffffff;
+    cursor: pointer;
+    font-family: Inter, Arial, sans-serif;
+    font-weight: 900;
+    min-height: 2.95rem;
+    padding: 0.65rem 1rem;
+}
+
+.ticket-tab:hover,
+.ticket-tab:focus {
+    border-color: #f4c95d;
+}
+
+.ticket-tab.active {
+    background: #f5f1e8;
+    border-color: #f5f1e8;
+    color: #991b1b;
+}
+
+.ticket-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.ticket-card {
+    align-items: start;
+    background: #f5f1e8;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 8px;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.22);
+    color: #111827;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: clamp(1rem, 2.4vw, 1.35rem);
+}
+
+.ticket-card > div:first-child {
+    min-width: 0;
+}
+
+.ticket-kind {
+    background: #111827;
+    border-radius: 999px;
+    color: #f4c95d;
+    display: inline-flex;
+    font-family: Inter, Arial, sans-serif;
+    font-size: 0.74rem;
+    font-weight: 900;
+    margin-bottom: 0.65rem;
+    padding: 0.3rem 0.65rem;
+    text-transform: uppercase;
+}
+
+.ticket-card h2 {
+    color: #991b1b;
+    font-size: clamp(1.35rem, 2.8vw, 2rem);
+    line-height: 1.05;
+    margin: 0 0 0.5rem;
+}
+
+.ticket-card p,
+.ticket-card small {
+    color: #4b5563;
+    font-family: Inter, Arial, sans-serif;
+    font-weight: 800;
+    line-height: 1.45;
+    margin: 0;
+}
+
+.ticket-card small {
+    display: inline-block;
+    margin-top: 0.7rem;
+}
+
+.ticket-actions {
+    align-items: stretch;
+    display: grid;
+    gap: 0.55rem;
+    justify-items: stretch;
+    min-width: 150px;
+}
+
+.ticket-actions .btn {
+    border-radius: 8px;
+    font-family: Inter, Arial, sans-serif;
+    font-weight: 900;
+    min-height: 2.6rem;
+}
+
+.ticket-watch-button {
+    background: #16885b;
+    border-color: #16885b;
+}
+
+.ticket-watch-button:hover,
+.ticket-watch-button:focus {
+    background: #106b47;
+    border-color: #106b47;
+}
+
+.ticket-session-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.session-state {
+    align-items: center;
+    border-radius: 8px;
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    font-family: Inter, Arial, sans-serif;
+    font-size: 0.86rem;
+    font-weight: 900;
+    margin-top: 0.5rem;
+    padding: 0.5rem 0.7rem;
+}
+
+.session-state em {
+    font-style: normal;
+}
+
+.session-state.available {
+    background: #dcfce7;
+    border: 1px solid #16a34a;
+    color: #166534;
+}
+
+.session-state.unavailable {
+    background: #fee2e2;
+    border: 1px solid #ef4444;
+    color: #991b1b;
+}
+
+.ticket-catalog {
+    border-top: 1px solid #ddd3c3;
+    grid-column: 1 / -1;
+    padding-top: 1rem;
+}
+
+.ticket-catalog p {
+    color: #5b6472;
+    font-family: Inter, Arial, sans-serif;
+    font-weight: 800;
+    margin: 0;
+}
+
+.ticket-catalog-grid {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.ticket-movie {
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #ddd3c3;
+    border-radius: 8px;
+    display: flex;
+    gap: 0.75rem;
+    justify-content: space-between;
+    padding: 0.85rem;
+}
+
+.ticket-movie strong {
+    color: #111827;
+    display: block;
+}
+
+.ticket-movie span {
+    color: #5b6472;
+    display: block;
+    font-family: Inter, Arial, sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.ticket-movie .session-state {
+    margin-top: 0.35rem;
+}
+
+.tickets-empty {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 8px;
+    color: #d8dce5;
+    font-family: Inter, Arial, sans-serif;
+    font-weight: 800;
+    padding: 1rem;
+}
+
+@media (max-width: 720px) {
+    .ticket-card {
+        grid-template-columns: 1fr;
+    }
+
+    .ticket-actions {
+        min-width: 0;
+    }
+}
+

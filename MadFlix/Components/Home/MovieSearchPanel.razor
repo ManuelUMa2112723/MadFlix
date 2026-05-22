@@ -1,0 +1,71 @@
+<section class="search-panel" id="catalogo" aria-labelledby="search-title">
+    <div class="search-heading">
+        <p class="section-kicker">Pesquisa inteligente</p>
+        <h2 id="search-title">Encontra um filme ou ator</h2>
+    </div>
+
+    <div class="search-controls">
+        <div class="segmented-control" role="radiogroup" aria-label="Tipo de pesquisa">
+            <label class="segment @(SearchType == "filme" ? "active" : null)">
+                <input type="radio"
+                       name="tipoBusca"
+                       value="filme"
+                       checked="@(SearchType == "filme")"
+                       @onchange="OnSearchTypeChanged" />
+                Filme
+            </label>
+            <label class="segment @(SearchType == "ator" ? "active" : null)">
+                <input type="radio"
+                       name="tipoBusca"
+                       value="ator"
+                       checked="@(SearchType == "ator")"
+                       @onchange="OnSearchTypeChanged" />
+                Ator
+            </label>
+        </div>
+
+        <div class="search-field">
+            <span aria-hidden="true">⌕</span>
+            <input type="text"
+                   value="@SearchTerm"
+                   @oninput="OnSearchTermChanged"
+                   @onkeydown="OnSearchKeyDown"
+                   placeholder="@(SearchType == "filme" ? "Pesquisar filme..." : "Pesquisar ator...")" />
+        </div>
+
+        <button class="btn search-button" type="button" @onclick="OnSearch" disabled="@IsLoading">
+            @(IsLoading ? "A pesquisar" : "Pesquisar")
+        </button>
+    </div>
+</section>
+
+@code {
+    [Parameter] public string SearchTerm { get; set; } = string.Empty;
+    [Parameter] public string SearchType { get; set; } = "filme";
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public EventCallback<string> SearchTermChanged { get; set; }
+    [Parameter] public EventCallback<string> SearchTypeChanged { get; set; }
+    [Parameter] public EventCallback SearchRequested { get; set; }
+
+    private async Task OnSearchTermChanged(ChangeEventArgs e)
+    {
+        await SearchTermChanged.InvokeAsync(e.Value?.ToString() ?? string.Empty);
+    }
+
+    private async Task OnSearchTypeChanged(ChangeEventArgs e)
+    {
+        await SearchTypeChanged.InvokeAsync(e.Value?.ToString() ?? "filme");
+    }
+
+    private async Task OnSearchKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+            await OnSearch();
+    }
+
+    private async Task OnSearch()
+    {
+        await SearchRequested.InvokeAsync();
+    }
+}
+

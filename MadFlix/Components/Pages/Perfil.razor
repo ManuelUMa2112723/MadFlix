@@ -11,19 +11,35 @@
 
 <PageTitle>Perfil</PageTitle>
 
-<h1>Perfil</h1>
-
 <AuthorizeView Roles="User,Admin">
     <Authorized Context="authState">
-
-        <section class="border rounded p-3 mb-4">
-            <h2 class="h4">Informacao basica</h2>
-            <p><strong>Nome:</strong> @authState.User.Identity?.Name</p>
-            <p><strong>Email:</strong> @authState.User.FindFirst(ClaimTypes.Email)?.Value</p>
+        <section class="profile-hero" aria-labelledby="profile-title">
+            <div class="profile-avatar-large" aria-hidden="true">
+                @GetUserInitials(authState.User.Identity?.Name)
+            </div>
+            <div>
+                <p class="profile-kicker">Minha conta</p>
+                <h1 id="profile-title">Perfil</h1>
+                <p>Gere os teus dados, listas pessoais e definicoes de acesso MadFlix.</p>
+            </div>
         </section>
 
-        <section class="border rounded p-3 mb-4">
-            <h2 class="h4">Alterar password</h2>
+        <section class="profile-card">
+            <h2>Informacao basica</h2>
+            <div class="profile-info-grid">
+                <div>
+                    <span>Nome</span>
+                    <strong>@authState.User.Identity?.Name</strong>
+                </div>
+                <div>
+                    <span>Email</span>
+                    <strong>@authState.User.FindFirst(ClaimTypes.Email)?.Value</strong>
+                </div>
+            </div>
+        </section>
+
+        <section class="profile-card">
+            <h2>Alterar password</h2>
 
             @if (isAdmin)
             {
@@ -53,15 +69,15 @@
             }
             else
             {
-                <p class="text-muted">Apenas administradores podem alterar a password.</p>
+                <p class="profile-muted">Apenas administradores podem alterar a password.</p>
             }
         </section>
 
-        <section class="border rounded p-3 mb-4">
-            <h2 class="h4">Listas pessoais</h2>
+        <section class="profile-card">
+            <h2>Listas pessoais</h2>
 
-            <div class="d-flex gap-2 mb-3">
-                <input class="form-control" style="max-width: 300px;"
+            <div class="profile-list-form">
+                <input class="form-control"
                        @bind="nomeLista"
                        placeholder="Nome da nova lista..." />
                 <button class="btn btn-primary" @onclick="CriarLista">
@@ -85,16 +101,16 @@
             }
             else if (listas.Count == 0)
             {
-                <p class="text-muted">Ainda nao tem listas pessoais.</p>
+                <p class="profile-muted">Ainda nao tem listas pessoais.</p>
             }
             else
             {
-                <div class="list-group">
+                <div class="profile-lists">
                     @foreach (var lista in listas)
                     {
-                        <div class="list-group-item">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h3 class="h6 mb-0">@lista.Nome</h3>
+                        <article class="profile-list-item">
+                            <div class="profile-list-header">
+                                <h3>@lista.Nome</h3>
                                 <button class="btn btn-sm btn-outline-danger"
                                         @onclick="() => EliminarLista(lista.Id)">
                                     Eliminar
@@ -118,9 +134,9 @@
                             }
                             else
                             {
-                                <p class="text-muted mt-2 mb-0 small">Esta lista ainda nao tem filmes.</p>
+                                <p class="profile-muted small mb-0">Esta lista ainda nao tem filmes.</p>
                             }
-                        </div>
+                        </article>
                     }
                 </div>
             }
@@ -147,6 +163,22 @@
     private string? passwordMensagem;
     private string? passwordErro;
     private bool passwordChanging;
+
+    private static string GetUserInitials(string? userName)
+    {
+        if (string.IsNullOrWhiteSpace(userName))
+            return "U";
+
+        var parts = userName.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        if (parts.Length == 0)
+            return "U";
+
+        if (parts.Length == 1)
+            return parts[0][0].ToString().ToUpperInvariant();
+
+        return $"{parts[0][0]}{parts[^1][0]}".ToUpperInvariant();
+    }
 
     protected override async Task OnInitializedAsync()
     {

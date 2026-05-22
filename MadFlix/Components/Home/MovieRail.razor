@@ -1,0 +1,76 @@
+<section class="movie-rail" aria-labelledby="@TitleId">
+    <div class="section-heading">
+        <div>
+            <p class="section-kicker">@Kicker</p>
+            <h2 id="@TitleId">@Title</h2>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(ActionHref))
+        {
+            <a class="section-link" href="@ActionHref">@ActionText</a>
+        }
+    </div>
+
+    @if (IsLoading)
+    {
+        <div class="loading-strip">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    }
+    else if (Movies.Count > 0)
+    {
+        <div class="movie-grid">
+            @foreach (var movie in Movies)
+            {
+                <article class="movie-card clickable-movie" @onclick="() => MovieSelected.InvokeAsync(movie.Id)">
+                    <div class="movie-poster">
+                        @if (!string.IsNullOrWhiteSpace(movie.Poster) && movie.Poster != "N/A")
+                        {
+                            <img src="@movie.Poster" alt="@movie.Titulo" />
+                        }
+                        else
+                        {
+                            <div class="poster-fallback">@movie.Titulo</div>
+                        }
+                        <span class="rating-pill">IMDb @(movie.ImdbRating?.ToString("0.0") ?? "N/A")</span>
+                    </div>
+
+                    <div class="movie-card-body">
+                        <h3>@movie.Titulo</h3>
+                        <p>@movie.Genero</p>
+                        <small>Sessao: 11:30 - 16:30</small>
+                        <button class="btn btn-card-action"
+                                type="button"
+                                @onclick:stopPropagation="true"
+                                @onclick="() => TicketRequested.InvokeAsync(movie)"
+                                disabled="@(!IsAuthenticated)">
+                            Adicionar bilhete
+                        </button>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <strong>Catalogo temporariamente indisponivel.</strong>
+            <span>Tenta pesquisar por um titulo especifico.</span>
+        </div>
+    }
+</section>
+
+@code {
+    [Parameter] public string Kicker { get; set; } = "Recomendados";
+    [Parameter] public string Title { get; set; } = "Escolhas da casa";
+    [Parameter] public string TitleId { get; set; } = "movie-rail-title";
+    [Parameter] public string? ActionHref { get; set; }
+    [Parameter] public string ActionText { get; set; } = "Ver mais";
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public bool IsAuthenticated { get; set; }
+    [Parameter, EditorRequired] public IReadOnlyList<Filme> Movies { get; set; } = [];
+    [Parameter] public EventCallback<int> MovieSelected { get; set; }
+    [Parameter] public EventCallback<Filme> TicketRequested { get; set; }
+}
+
