@@ -3,6 +3,7 @@
 @using MadFlix.Models
 @using MadFlix.Models.Acessos
 @inject IBilheteHistoricoService BilheteHistoricoService
+@inject IFestivalMovieService FestivalMovieService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 
@@ -22,6 +23,16 @@
             }
             else
             {
+                @if (!string.IsNullOrWhiteSpace(mensagem))
+                {
+                    <div class="alert alert-success">@mensagem</div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(erro))
+                {
+                    <div class="alert alert-danger">@erro</div>
+                }
+
                 <div class="ticket-tabs" role="tablist" aria-label="Estado dos bilhetes">
                     <button class="@ObterClasseTab(EstadoBilhetes.Ativos)"
                             type="button"
@@ -52,22 +63,104 @@
                             <article class="ticket-card">
                                 <div>
                                     <span class="ticket-kind">@ObterDescricaoTipo(bilhete.TipoAcesso)</span>
-                                    <h2>@(bilhete.Filme?.Titulo ?? "Filme")</h2>
-                                    <p>
-                                        @bilhete.InicioAcessoUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
-                                        -
-                                        @bilhete.FimAcessoUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
-                                    </p>
+                                    <h2>@bilhete.Nome</h2>
+                                    @if (bilhete.TipoAcesso == TipoAcesso.PasseDiario ||
+                                         bilhete.TipoAcesso == TipoAcesso.PasseCompleto ||
+                                         bilhete.TipoAcesso == TipoAcesso.AluguerDigital)
+                                    {
+                                        <p>@ObterTextoPeriodoPasse(bilhete)</p>
+                                        <p>
+                                            Acesso:
+                                            @bilhete.InicioAcessoUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                            -
+                                            @bilhete.FimAcessoUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                        </p>
+                                        <div class="ticket-session-list">
+                                            @foreach (var sessao in ObterSessoesFestival(bilhete))
+                                            {
+                                                <span class="@sessao.ClasseCss">
+                                                    <strong>@sessao.Nome</strong>
+                                                    @sessao.Inicio.ToString("HH:mm") - @sessao.Fim.ToString("HH:mm")
+                                                    <em>@sessao.Estado</em>
+                                                </span>
+                                            }
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <p>
+                                            @bilhete.InicioAcessoUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                            -
+                                            @bilhete.FimAcessoUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                        </p>
+                                        <span class="@ObterEstadoSessao(bilhete).ClasseCss">
+                                            <strong>Sessao</strong>
+                                            @ObterEstadoSessao(bilhete).Inicio.ToString("HH:mm") - @ObterEstadoSessao(bilhete).Fim.ToString("HH:mm")
+                                            <em>@ObterEstadoSessao(bilhete).Estado</em>
+                                        </span>
+                                    }
                                     <small>Comprado em @bilhete.CompradoEmUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
                                 </div>
 
-                                @if (estadoSelecionado == EstadoBilhetes.Ativos)
-                                {
-                                    <button class="btn btn-light"
+                                <div class="ticket-actions">
+                                    @if (estadoSelecionado == EstadoBilhetes.Ativos && bilhete.FilmeId.HasValue)
+                                    {
+                                        <button class="btn btn-success ticket-watch-button"
+                                                type="button"
+                                                @onclick="() => VerFilme(bilhete.FilmeId.Value)">
+                                            Ver filme
+                                        </button>
+                                    }
+                                    else if (estadoSelecionado == EstadoBilhetes.Ativos && bilhete.FestivalId.HasValue)
+                                    {
+                                        <button class="btn btn-success ticket-watch-button"
+                                                type="button"
+                                                @onclick="() => AlternarCatalogoFestival(bilhete)">
+                                            @ObterTextoBotaoCatalogo(bilhete)
+                                        </button>
+                                    }
+
+                                    <button class="btn btn-outline-danger"
                                             type="button"
-                                            @onclick="() => VerFilme(bilhete.FilmeId)">
-                                        Ver filme
+                                            @onclick="() => RemoverBilhete(bilhete)">
+                                        Remover
                                     </button>
+                                </div>
+
+                                @if (CatalogoEstaAberto(bilhete))
+                                {
+                                    <div class="ticket-catalog">
+                                        @if (catalogosACarregar.Contains(bilhete.FestivalId!.Value))
+                                        {
+                                            <p>A carregar catalogo...</p>
+                                        }
+                                        else if (filmesPorFestival.TryGetValue(bilhete.FestivalId.Value, out var filmesFestival) && filmesFestival.Count > 0)
+                                        {
+                                            <div class="ticket-catalog-grid">
+                                                @foreach (var filme in filmesFestival)
+                                                {
+                                                    <article class="ticket-movie">
+                                                        <div>
+                                                            <strong>@filme.Titulo</strong>
+                                                            <span>@filme.Genero</span>
+                                                            <small class="@ObterEstadoSessao(bilhete).ClasseCss">
+                                                                @ObterEstadoSessao(bilhete).Estado
+                                                            </small>
+                                                        </div>
+                                                        <button class="btn btn-sm btn-success"
+                                                                type="button"
+                                                                @onclick="() => VerFilme(filme.Id)">
+                                                            Ver filme
+                                                        </button>
+                                                    </article>
+                                                }
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <p>Este festival ainda nao tem filmes no catalogo.</p>
+                                        }
+                                    </div>
                                 }
                             </article>
                         }
@@ -137,9 +230,28 @@
         border-radius: .5rem;
         color: #101828;
         display: flex;
+        flex-wrap: wrap;
         gap: 1rem;
         justify-content: space-between;
         padding: 1rem;
+    }
+
+    .ticket-card > div:first-child {
+        flex: 1 1 320px;
+    }
+
+    .ticket-actions {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: .5rem;
+        justify-content: flex-end;
+        min-width: 210px;
+    }
+
+    .ticket-watch-button {
+        font-weight: 800;
+        min-width: 110px;
     }
 
     .ticket-card h2 {
@@ -153,11 +265,89 @@
         margin: 0;
     }
 
+    .session-state {
+        align-items: center;
+        border-radius: .45rem;
+        display: inline-flex;
+        flex-wrap: wrap;
+        gap: .35rem;
+        font-size: .86rem;
+        font-weight: 700;
+        margin-top: .45rem;
+        padding: .4rem .6rem;
+    }
+
+    .ticket-session-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .45rem;
+        margin-top: .45rem;
+    }
+
+    .session-state em {
+        font-style: normal;
+    }
+
+    .session-state.available {
+        background: #dcfce7;
+        border: 1px solid #16a34a;
+        color: #166534;
+    }
+
+    .session-state.unavailable {
+        background: #fee2e2;
+        border: 1px solid #ef4444;
+        color: #991b1b;
+    }
+
     .ticket-kind {
         color: #667085;
         font-size: .85rem;
         font-weight: 700;
         text-transform: uppercase;
+    }
+
+    .ticket-catalog {
+        border-top: 1px solid #e4e7ec;
+        flex: 1 0 100%;
+        padding-top: .85rem;
+    }
+
+    .ticket-catalog p {
+        color: #475467;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .ticket-catalog-grid {
+        display: grid;
+        gap: .65rem;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .ticket-movie {
+        align-items: center;
+        border: 1px solid #e4e7ec;
+        border-radius: .45rem;
+        display: flex;
+        gap: .75rem;
+        justify-content: space-between;
+        padding: .75rem;
+    }
+
+    .ticket-movie strong {
+        color: #7f0011;
+        display: block;
+    }
+
+    .ticket-movie span {
+        color: #667085;
+        display: block;
+        font-size: .9rem;
+    }
+
+    .ticket-movie .session-state {
+        margin-top: .35rem;
     }
 
     .tickets-empty {
@@ -170,6 +360,11 @@
             align-items: stretch;
             flex-direction: column;
         }
+
+        .ticket-actions {
+            justify-content: flex-start;
+            min-width: 0;
+        }
     }
 </style>
 
@@ -177,10 +372,16 @@
     private BilheteHistorico historico = new();
     private EstadoBilhetes estadoSelecionado = EstadoBilhetes.Ativos;
     private bool carregando = true;
+    private int? utilizadorId;
+    private string? mensagem;
+    private string? erro;
+    private readonly Dictionary<int, List<Filme>> filmesPorFestival = new();
+    private readonly HashSet<int> catalogosAbertos = new();
+    private readonly HashSet<int> catalogosACarregar = new();
 
     protected override async Task OnInitializedAsync()
     {
-        var utilizadorId = await ObterUtilizadorIdAutenticado();
+        utilizadorId = await ObterUtilizadorIdAutenticado();
 
         if (utilizadorId is null)
         {
@@ -188,11 +389,19 @@
             return;
         }
 
-        historico = await BilheteHistoricoService.ObterHistoricoAsync(utilizadorId.Value);
+        await CarregarHistorico();
         carregando = false;
     }
 
-    private IReadOnlyList<FilmeCompra> ObterBilhetesSelecionados()
+    private async Task CarregarHistorico()
+    {
+        if (utilizadorId is null)
+            return;
+
+        historico = await BilheteHistoricoService.ObterHistoricoAsync(utilizadorId.Value);
+    }
+
+    private IReadOnlyList<HistoricoAcessoItem> ObterBilhetesSelecionados()
     {
         return estadoSelecionado switch
         {
@@ -219,10 +428,140 @@
         };
     }
 
+    private static SessaoEstadoViewModel ObterEstadoSessao(HistoricoAcessoItem bilhete)
+    {
+        var inicio = bilhete.InicioAcessoUtc.ToLocalTime();
+        var fim = bilhete.FimAcessoUtc.ToLocalTime();
+        var estado = new SessaoEstadoContext(inicio, fim, DateTime.Now);
+
+        return new SessaoEstadoViewModel
+        {
+            Nome = "Sessao",
+            Inicio = inicio,
+            Fim = fim,
+            Estado = estado.Nome,
+            ClasseCss = estado.ClasseCss,
+            Disponivel = estado.Disponivel
+        };
+    }
+
+    private static IReadOnlyList<SessaoEstadoViewModel> ObterSessoesFestival(HistoricoAcessoItem bilhete)
+    {
+        if (bilhete.TipoAcesso == TipoAcesso.AluguerDigital)
+        {
+            var inicio = bilhete.InicioAcessoUtc.ToLocalTime();
+            var fim = bilhete.FimAcessoUtc.ToLocalTime();
+            var estado = new SessaoEstadoContext(inicio, fim, DateTime.Now);
+
+            return
+            [
+                new SessaoEstadoViewModel
+                {
+                    Nome = "Sessao coberta",
+                    Inicio = inicio,
+                    Fim = fim,
+                    Estado = estado.Nome,
+                    ClasseCss = estado.ClasseCss,
+                    Disponivel = estado.Disponivel
+                }
+            ];
+        }
+
+        var dia = bilhete.InicioAcessoUtc.ToLocalTime().Date;
+
+        return SessaoFestivalCatalog.SessoesPasseDiario
+            .Select(sessao =>
+            {
+                var inicio = sessao.ObterInicio(dia);
+                var fim = sessao.ObterFim(dia);
+                var estado = new SessaoEstadoContext(inicio, fim, DateTime.Now);
+
+                return new SessaoEstadoViewModel
+                {
+                    Nome = sessao.Nome,
+                    Inicio = inicio,
+                    Fim = fim,
+                    Estado = estado.Nome,
+                    ClasseCss = estado.ClasseCss,
+                    Disponivel = estado.Disponivel
+                };
+            })
+            .ToList();
+    }
+
+    private static string ObterTextoPeriodoPasse(HistoricoAcessoItem bilhete)
+    {
+        return bilhete.TipoAcesso switch
+        {
+            TipoAcesso.PasseCompleto => $"Dia da sessao {bilhete.InicioAcessoUtc.ToLocalTime():dd/MM/yyyy}",
+            TipoAcesso.AluguerDigital => "Janela coberta pelo aluguer digital",
+            _ => $"Dia {bilhete.InicioAcessoUtc.ToLocalTime():dd/MM/yyyy}"
+        };
+    }
+
     private void VerFilme(int filmeId)
     {
         var returnUrl = Uri.EscapeDataString(NavigationManager.ToLocalPath());
         NavigationManager.NavigateTo($"/filmes/{filmeId}/assistir?returnUrl={returnUrl}");
+    }
+
+    private async Task AlternarCatalogoFestival(HistoricoAcessoItem bilhete)
+    {
+        if (!bilhete.FestivalId.HasValue)
+            return;
+
+        if (!catalogosAbertos.Add(bilhete.Id))
+        {
+            catalogosAbertos.Remove(bilhete.Id);
+            return;
+        }
+
+        var festivalId = bilhete.FestivalId.Value;
+
+        if (filmesPorFestival.ContainsKey(festivalId))
+            return;
+
+        catalogosACarregar.Add(festivalId);
+        filmesPorFestival[festivalId] = (await FestivalMovieService.ListarFilmesAsync(festivalId)).ToList();
+        catalogosACarregar.Remove(festivalId);
+    }
+
+    private bool CatalogoEstaAberto(HistoricoAcessoItem bilhete)
+    {
+        return bilhete.FestivalId.HasValue && catalogosAbertos.Contains(bilhete.Id);
+    }
+
+    private string ObterTextoBotaoCatalogo(HistoricoAcessoItem bilhete)
+    {
+        return CatalogoEstaAberto(bilhete)
+            ? "Esconder catalogo"
+            : "Ver catalogo";
+    }
+
+    private async Task RemoverBilhete(HistoricoAcessoItem bilhete)
+    {
+        mensagem = null;
+        erro = null;
+
+        if (utilizadorId is null)
+        {
+            erro = "Tem de iniciar sessao para remover bilhetes.";
+            return;
+        }
+
+        var resultado = await BilheteHistoricoService.RemoverBilheteAsync(
+            utilizadorId.Value,
+            bilhete.Id,
+            bilhete.AcessoFestival);
+
+        if (!resultado.Succeeded)
+        {
+            erro = resultado.ErrorMessage;
+            return;
+        }
+
+        mensagem = resultado.Value;
+        await CarregarHistorico();
     }
 
     private async Task<int?> ObterUtilizadorIdAutenticado()

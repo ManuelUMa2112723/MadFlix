@@ -16,6 +16,7 @@ public class AppDbContext : DbContext
     public DbSet<Festival> Festivais { get; set; }
     public DbSet<Utilizador> Utilizadores { get; set; }
     public DbSet<FilmeCompra> FilmeCompras { get; set; }
+    public DbSet<AcessoFestivalCompra> AcessosFestivalCompras { get; set; }
     public DbSet<FilmeVisualizacao> FilmeVisualizacoes { get; set; }
     public DbSet<Carrinho> Carrinhos { get; set; }
     public DbSet<CarrinhoItem> CarrinhoItens { get; set; }
@@ -69,6 +70,19 @@ public class AppDbContext : DbContext
             .HasOne(fc => fc.Filme)
             .WithMany(f => f.Compras)
             .HasForeignKey(fc => fc.FilmeId);
+
+        modelBuilder.Entity<AcessoFestivalCompra>()
+            .HasIndex(acesso => new { acesso.UtilizadorId, acesso.FestivalId });
+
+        modelBuilder.Entity<AcessoFestivalCompra>()
+            .HasOne(acesso => acesso.Utilizador)
+            .WithMany(utilizador => utilizador.AcessosFestival)
+            .HasForeignKey(acesso => acesso.UtilizadorId);
+
+        modelBuilder.Entity<AcessoFestivalCompra>()
+            .HasOne(acesso => acesso.Festival)
+            .WithMany(festival => festival.Compras)
+            .HasForeignKey(acesso => acesso.FestivalId);
 
         modelBuilder.Entity<FilmeVisualizacao>()
             .HasIndex(fv => new { fv.UtilizadorId, fv.FilmeId })

@@ -8,6 +8,10 @@ public interface IFilmeCompraRepository
         int utilizadorId,
         CancellationToken cancellationToken = default);
 
+    Task<Models.FilmeCompra?> GetByIdAsync(
+        int compraId,
+        CancellationToken cancellationToken = default);
+
     Task<bool> TemAcessoValidoAsync(
         int utilizadorId,
         int filmeId,
@@ -15,4 +19,6 @@ public interface IFilmeCompraRepository
         CancellationToken cancellationToken = default);
 
     Task AddAsync(Models.FilmeCompra compra, CancellationToken cancellationToken = default);
+
+    Task RemoveAsync(Models.FilmeCompra compra, CancellationToken cancellationToken = default);
 }

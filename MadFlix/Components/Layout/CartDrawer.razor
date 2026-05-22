@@ -283,7 +283,7 @@
             return;
         }
 
-        var resultado = await CarrinhoService.FinalizarBilhetesSessaoAsync(utilizadorId.Value);
+        var resultado = await CarrinhoService.FinalizarAcessosAsync(utilizadorId.Value);
 
         if (!resultado.Succeeded)
         {

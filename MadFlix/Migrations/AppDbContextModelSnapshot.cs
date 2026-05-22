@@ -17,6 +17,39 @@ namespace MadFlix.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.7");
 
+            modelBuilder.Entity("MadFlix.Models.AcessoFestivalCompra", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CompradoEmUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("FestivalId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("FimAcessoUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("InicioAcessoUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TipoAcesso")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("UtilizadorId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FestivalId");
+
+                    b.HasIndex("UtilizadorId", "FestivalId");
+
+                    b.ToTable("AcessosFestivalCompras");
+                });
+
             modelBuilder.Entity("MadFlix.Models.Ator", b =>
                 {
                     b.Property<int>("Id")
@@ -397,6 +430,25 @@ namespace MadFlix.Migrations
                     b.ToTable("Utilizadores");
                 });
 
+            modelBuilder.Entity("MadFlix.Models.AcessoFestivalCompra", b =>
+                {
+                    b.HasOne("MadFlix.Models.Festival", "Festival")
+                        .WithMany("Compras")
+                        .HasForeignKey("FestivalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MadFlix.Models.Utilizador", "Utilizador")
+                        .WithMany("AcessosFestival")
+                        .HasForeignKey("UtilizadorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Festival");
+
+                    b.Navigation("Utilizador");
+                });
+
             modelBuilder.Entity("MadFlix.Models.Carrinho", b =>
                 {
                     b.HasOne("MadFlix.Models.Utilizador", "Utilizador")
@@ -571,6 +623,8 @@ namespace MadFlix.Migrations
                 {
                     b.Navigation("CarrinhoItens");
 
+                    b.Navigation("Compras");
+
                     b.Navigation("Filmes");
                 });
 
@@ -594,6 +648,8 @@ namespace MadFlix.Migrations
 
             modelBuilder.Entity("MadFlix.Models.Utilizador", b =>
                 {
+                    b.Navigation("AcessosFestival");
+
                     b.Navigation("Carrinho");
 
                     b.Navigation("ComentariosFilmes");

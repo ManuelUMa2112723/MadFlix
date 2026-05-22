@@ -8,6 +8,7 @@ namespace MadFlix.Services.Filmes;
 public sealed class FilmePlaybackService : IFilmePlaybackService
 {
     private readonly IFilmeRepository _filmeRepository;
+    private readonly IAcessoFestivalCompraRepository _acessoFestivalCompraRepository;
     private readonly IFilmeCompraRepository _compraRepository;
     private readonly IUserNotificationSubject _notificationSubject;
     private readonly IUtilizadorRepository _utilizadorRepository;
@@ -15,12 +16,14 @@ public sealed class FilmePlaybackService : IFilmePlaybackService
 
     public FilmePlaybackService(
         IFilmeRepository filmeRepository,
+        IAcessoFestivalCompraRepository acessoFestivalCompraRepository,
         IFilmeCompraRepository compraRepository,
         IUserNotificationSubject notificationSubject,
         IUtilizadorRepository utilizadorRepository,
         IFilmeVisualizacaoRepository visualizacaoRepository)
     {
         _filmeRepository = filmeRepository;
+        _acessoFestivalCompraRepository = acessoFestivalCompraRepository;
         _compraRepository = compraRepository;
         _notificationSubject = notificationSubject;
         _utilizadorRepository = utilizadorRepository;
@@ -42,11 +45,21 @@ public sealed class FilmePlaybackService : IFilmePlaybackService
         if (filme is null)
             return ServiceResult<string>.Failure("Filme nao encontrado.");
 
+        var momentoUtc = DateTime.UtcNow;
         var temAcesso = await _compraRepository.TemAcessoValidoAsync(
             utilizadorId,
             filmeId,
-            DateTime.UtcNow,
+            momentoUtc,
             cancellationToken);
+
+        if (!temAcesso && filme.FestivalId.HasValue)
+        {
+            temAcesso = await _acessoFestivalCompraRepository.TemAcessoValidoAsync(
+                utilizadorId,
+                filme.FestivalId.Value,
+                momentoUtc,
+                cancellationToken);
+        }
 
         return temAcesso
             ? ServiceResult<string>.Success($"Acesso valido para '{filme.Titulo}'.")

@@ -32,6 +32,15 @@ public sealed class EfFilmeCompraRepository : IFilmeCompraRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<FilmeCompra?> GetByIdAsync(
+        int compraId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.FilmeCompras
+            .Include(compra => compra.Filme)
+            .FirstOrDefaultAsync(compra => compra.Id == compraId, cancellationToken);
+    }
+
     public async Task<bool> TemAcessoValidoAsync(
         int utilizadorId,
         int filmeId,
@@ -44,13 +53,19 @@ public sealed class EfFilmeCompraRepository : IFilmeCompraRepository
                     compra.UtilizadorId == utilizadorId &&
                     compra.FilmeId == filmeId &&
                     compra.InicioAcessoUtc <= momentoUtc &&
-                    compra.FimAcessoUtc >= momentoUtc,
+                    compra.FimAcessoUtc > momentoUtc,
                 cancellationToken);
     }
 
     public async Task AddAsync(FilmeCompra compra, CancellationToken cancellationToken = default)
     {
         _context.FilmeCompras.Add(compra);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task RemoveAsync(FilmeCompra compra, CancellationToken cancellationToken = default)
+    {
+        _context.FilmeCompras.Remove(compra);
         await _context.SaveChangesAsync(cancellationToken);
     }
 }

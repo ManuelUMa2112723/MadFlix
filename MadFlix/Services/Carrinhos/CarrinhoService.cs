@@ -4,6 +4,7 @@ using MadFlix.Models.Acessos;
 using MadFlix.Models.Acessos.DecoratorsAcessos;
 using MadFlix.Models.Acessos.FactoriesAcessos;
 using MadFlix.Models.Acessos.InterfaceAcessos;
+using MadFlix.Models.Acessos.SessoesFestival;
 using MadFlix.Repositories;
 using MadFlix.Services.Notifications;
 
@@ -12,6 +13,7 @@ namespace MadFlix.Services.Carrinhos;
 public sealed class CarrinhoService : ICarrinhoService
 {
     private readonly IAcessoFactory _acessoFactory;
+    private readonly IAcessoFestivalCompraRepository _acessoFestivalCompraRepository;
     private readonly ICarrinhoRepository _carrinhoRepository;
     private readonly IFilmeRepository _filmeRepository;
     private readonly IFilmeCompraRepository _filmeCompraRepository;
@@ -25,6 +27,7 @@ public sealed class CarrinhoService : ICarrinhoService
 
     public CarrinhoService(
         IAcessoFactory acessoFactory,
+        IAcessoFestivalCompraRepository acessoFestivalCompraRepository,
         ICarrinhoRepository carrinhoRepository,
         IFilmeRepository filmeRepository,
         IFilmeCompraRepository filmeCompraRepository,
@@ -33,6 +36,7 @@ public sealed class CarrinhoService : ICarrinhoService
         IUtilizadorRepository utilizadorRepository)
     {
         _acessoFactory = acessoFactory;
+        _acessoFestivalCompraRepository = acessoFestivalCompraRepository;
         _carrinhoRepository = carrinhoRepository;
         _filmeRepository = filmeRepository;
         _filmeCompraRepository = filmeCompraRepository;
@@ -171,7 +175,7 @@ public sealed class CarrinhoService : ICarrinhoService
         return ServiceResult<string>.Success("Bilhete de sessao adicionado ao carrinho.");
     }
 
-    public async Task<ServiceResult<string>> FinalizarBilhetesSessaoAsync(
+    public async Task<ServiceResult<string>> FinalizarAcessosAsync(
         int utilizadorId,
         CancellationToken cancellationToken = default)
     {
@@ -180,24 +184,119 @@ public sealed class CarrinhoService : ICarrinhoService
         if (carrinho is null)
             return ServiceResult<string>.Failure("Carrinho nao encontrado.");
 
-        var bilhetesSessao = carrinho.Itens
-            .Where(item => item.TipoAcesso == TipoAcesso.BilheteSessao && item.FilmeId.HasValue)
+        var acessosAAtivar = carrinho.Itens
+            .Where(item =>
+                (item.TipoAcesso == TipoAcesso.BilheteSessao && item.FilmeId.HasValue) ||
+                ((item.TipoAcesso == TipoAcesso.PasseDiario ||
+                  item.TipoAcesso == TipoAcesso.PasseCompleto ||
+                  item.TipoAcesso == TipoAcesso.AluguerDigital) && item.FestivalId.HasValue))
             .ToList();
 
-        if (bilhetesSessao.Count == 0)
-            return ServiceResult<string>.Success("Compra concluida. Nao existiam bilhetes de sessao para ativar.");
+        if (acessosAAtivar.Count == 0)
+            return ServiceResult<string>.Success("Compra concluida. Nao existiam acessos suportados para ativar.");
 
-        foreach (var item in bilhetesSessao)
+        var acessosCriados = 0;
+
+        foreach (var item in acessosAAtivar)
         {
-            await _filmeCompraRepository.AddAsync(new FilmeCompra
+            if (item.TipoAcesso == TipoAcesso.BilheteSessao)
             {
-                UtilizadorId = utilizadorId,
-                FilmeId = item.FilmeId!.Value,
-                TipoAcesso = TipoAcesso.BilheteSessao,
-                InicioAcessoUtc = item.InicioAcessoUtc,
-                FimAcessoUtc = item.FimAcessoUtc,
-                CompradoEmUtc = DateTime.UtcNow
-            }, cancellationToken);
+                await _filmeCompraRepository.AddAsync(new FilmeCompra
+                {
+                    UtilizadorId = utilizadorId,
+                    FilmeId = item.FilmeId!.Value,
+                    TipoAcesso = TipoAcesso.BilheteSessao,
+                    InicioAcessoUtc = item.InicioAcessoUtc,
+                    FimAcessoUtc = item.FimAcessoUtc,
+                    CompradoEmUtc = DateTime.UtcNow
+                }, cancellationToken);
+
+                acessosCriados++;
+            }
+            else if (item.TipoAcesso == TipoAcesso.PasseDiario)
+            {
+                var diaFestival = item.InicioAcessoUtc.ToLocalTime().Date;
+
+                foreach (var sessao in SessaoFestivalCatalog.SessoesPasseDiario)
+                {
+                    await _acessoFestivalCompraRepository.AddAsync(new AcessoFestivalCompra
+                    {
+                        UtilizadorId = utilizadorId,
+                        FestivalId = item.FestivalId!.Value,
+                        TipoAcesso = TipoAcesso.PasseDiario,
+                        InicioAcessoUtc = sessao.ObterInicio(diaFestival).ToUniversalTime(),
+                        FimAcessoUtc = sessao.ObterFim(diaFestival).ToUniversalTime(),
+                        CompradoEmUtc = DateTime.UtcNow
+                    }, cancellationToken);
+
+                    acessosCriados++;
+                }
+            }
+            else if (item.TipoAcesso == TipoAcesso.PasseCompleto)
+            {
+                var inicioFestival = item.InicioAcessoUtc.ToLocalTime().Date;
+                var fimFestival = item.FimAcessoUtc.ToLocalTime().Date.AddDays(-1);
+
+                for (var dia = inicioFestival; dia <= fimFestival; dia = dia.AddDays(1))
+                {
+                    foreach (var sessao in SessaoFestivalCatalog.SessoesPasseDiario)
+                    {
+                        await _acessoFestivalCompraRepository.AddAsync(new AcessoFestivalCompra
+                        {
+                            UtilizadorId = utilizadorId,
+                            FestivalId = item.FestivalId!.Value,
+                            TipoAcesso = TipoAcesso.PasseCompleto,
+                            InicioAcessoUtc = sessao.ObterInicio(dia).ToUniversalTime(),
+                            FimAcessoUtc = sessao.ObterFim(dia).ToUniversalTime(),
+                            CompradoEmUtc = DateTime.UtcNow
+                        }, cancellationToken);
+
+                        acessosCriados++;
+                    }
+                }
+            }
+            else if (item.TipoAcesso == TipoAcesso.AluguerDigital)
+            {
+                var inicioAluguer = DateTime.Now;
+                var fimAluguer = inicioAluguer.AddHours(item.HorasAluguer ?? 48);
+                var festival = await _festivalRepository.GetByIdAsync(item.FestivalId!.Value, cancellationToken);
+
+                if (festival is not null)
+                {
+                    var primeiroDia = inicioAluguer.Date < festival.DataInicio.Date
+                        ? festival.DataInicio.Date
+                        : inicioAluguer.Date;
+                    var ultimoDia = fimAluguer.Date > festival.DataFim.Date
+                        ? festival.DataFim.Date
+                        : fimAluguer.Date;
+
+                    for (var dia = primeiroDia; dia <= ultimoDia; dia = dia.AddDays(1))
+                    {
+                        foreach (var sessao in SessaoFestivalCatalog.SessoesPasseDiario)
+                        {
+                            var inicioSessao = sessao.ObterInicio(dia);
+                            var fimSessao = sessao.ObterFim(dia);
+                            var inicioCoberto = inicioAluguer > inicioSessao ? inicioAluguer : inicioSessao;
+                            var fimCoberto = fimAluguer < fimSessao ? fimAluguer : fimSessao;
+
+                            if (inicioCoberto >= fimCoberto)
+                                continue;
+
+                            await _acessoFestivalCompraRepository.AddAsync(new AcessoFestivalCompra
+                            {
+                                UtilizadorId = utilizadorId,
+                                FestivalId = item.FestivalId.Value,
+                                TipoAcesso = TipoAcesso.AluguerDigital,
+                                InicioAcessoUtc = inicioCoberto.ToUniversalTime(),
+                                FimAcessoUtc = fimCoberto.ToUniversalTime(),
+                                CompradoEmUtc = DateTime.UtcNow
+                            }, cancellationToken);
+
+                            acessosCriados++;
+                        }
+                    }
+                }
+            }
 
             await _carrinhoRepository.RemoveItemAsync(item, cancellationToken);
         }
@@ -205,11 +304,13 @@ public sealed class CarrinhoService : ICarrinhoService
         await _notificationSubject.NotifyUserAsync(utilizadorId, new UserNotification
         {
             Titulo = "Acesso ativado",
-            Mensagem = "Os seus bilhetes de sessao ja estao disponiveis.",
+            Mensagem = "Os seus acessos ja estao disponiveis.",
             Tipo = "acesso"
         }, cancellationToken);
 
-        return ServiceResult<string>.Success("Compra concluida. Bilhete(s) de sessao ativado(s).");
+        return acessosCriados > 0
+            ? ServiceResult<string>.Success("Compra concluida. Acesso(s) ativado(s).")
+            : ServiceResult<string>.Success("Compra concluida. O festival ainda nao tinha filmes para ativar.");
     }
 
     public async Task<ServiceResult<string>> RemoverItemAsync(

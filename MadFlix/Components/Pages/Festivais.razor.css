@@ -19,3 +19,36 @@
         background: #f8f9fa;
         border-color: #ffffff;
     }
+
+.festival-session-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+
+.session-state {
+    align-items: center;
+    border-radius: .45rem;
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+    font-size: .88rem;
+    font-weight: 700;
+    padding: .45rem .65rem;
+}
+
+.session-state em {
+    font-style: normal;
+}
+
+.session-state.available {
+    background: #dcfce7;
+    border: 1px solid #16a34a;
+    color: #166534;
+}
+
+.session-state.unavailable {
+    background: #fee2e2;
+    border: 1px solid #ef4444;
+    color: #991b1b;
+}

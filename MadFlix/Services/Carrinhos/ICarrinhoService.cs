@@ -25,7 +25,7 @@ public interface ICarrinhoService
         decimal preco,
         CancellationToken cancellationToken = default);
 
-    Task<ServiceResult<string>> FinalizarBilhetesSessaoAsync(
+    Task<ServiceResult<string>> FinalizarAcessosAsync(
         int utilizadorId,
         CancellationToken cancellationToken = default);
 

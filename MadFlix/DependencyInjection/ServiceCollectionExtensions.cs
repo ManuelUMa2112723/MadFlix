@@ -44,6 +44,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IFilmeRepository, EfFilmeRepository>();
         services.AddScoped<IUtilizadorRepository, EfUtilizadorRepository>();
         services.AddScoped<IFilmeCompraRepository, EfFilmeCompraRepository>();
+        services.AddScoped<IAcessoFestivalCompraRepository, EfAcessoFestivalCompraRepository>();
         services.AddScoped<IFilmeVisualizacaoRepository, EfFilmeVisualizacaoRepository>();
         services.AddScoped<IFestivalRepository, EfFestivalRepository>();
         services.AddScoped<ICarrinhoRepository, EfCarrinhoRepository>();

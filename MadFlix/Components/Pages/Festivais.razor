@@ -76,6 +76,8 @@
                                             <div class="col-md-4">
                                                 <label class="form-label" for="@($"dia-acesso-{festival.Id}")">Dia</label>
                                                 <input id="@($"dia-acesso-{festival.Id}")" class="form-control" type="date"
+                                                       min="@festival.DataInicio.ToString("yyyy-MM-dd")"
+                                                       max="@festival.DataFim.ToString("yyyy-MM-dd")"
                                                        value="@compra.DiaFestival.ToString("yyyy-MM-dd")"
                                                        @onchange="e => AlterarDiaFestival(festival.Id, e.Value?.ToString())" />
                                             </div>
@@ -107,6 +109,22 @@
                                             </NotAuthorized>
                                         </AuthorizeView>
                                     </div>
+
+                                    @if (compra.Tipo == TipoAcesso.PasseDiario ||
+                                         compra.Tipo == TipoAcesso.PasseCompleto ||
+                                         compra.Tipo == TipoAcesso.AluguerDigital)
+                                    {
+                                        <div class="festival-session-list mt-3">
+                                            @foreach (var sessao in ObterSessoesFestival(compra))
+                                            {
+                                                <span class="@sessao.ClasseCss">
+                                                    <strong>@sessao.Nome</strong>
+                                                    @sessao.Inicio.ToString("HH:mm") - @sessao.Fim.ToString("HH:mm")
+                                                    <em>@sessao.Estado</em>
+                                                </span>
+                                            }
+                                        </div>
+                                    }
                                 </div>
                             </div>
 
@@ -378,8 +396,21 @@
 
     private void AlterarDiaFestival(int festivalId, string? valor)
     {
-        if (DateTime.TryParse(valor, out var dia))
-            comprasPorFestival[festivalId].DiaFestival = dia;
+        if (!DateTime.TryParse(valor, out var dia))
+            return;
+
+        var festival = festivais.FirstOrDefault(f => f.Id == festivalId);
+
+        if (festival is not null)
+        {
+            if (dia.Date < festival.DataInicio.Date)
+                dia = festival.DataInicio.Date;
+
+            if (dia.Date > festival.DataFim.Date)
+                dia = festival.DataFim.Date;
+        }
+
+        comprasPorFestival[festivalId].DiaFestival = dia.Date;
     }
 
     private void AlterarHorasAluguer(int festivalId, string? valor)
@@ -480,6 +511,83 @@
     {
         var returnUrl = Uri.EscapeDataString(NavigationManager.ToLocalPath());
         NavigationManager.NavigateTo($"/filmes/{filmeId}?returnUrl={returnUrl}");
+    }
+
+    private static IReadOnlyList<SessaoEstadoViewModel> ObterSessoesFestival(CompraFestivalForm compra)
+    {
+        if (compra.Tipo == TipoAcesso.AluguerDigital)
+            return ObterSessoesAluguerDigital(compra.HorasAluguer);
+
+        var dia = compra.Tipo == TipoAcesso.PasseDiario
+            ? compra.DiaFestival
+            : DateTime.Today;
+
+        return SessaoFestivalCatalog.SessoesPasseDiario
+            .Select(sessao =>
+            {
+                var inicio = sessao.ObterInicio(dia);
+                var fim = sessao.ObterFim(dia);
+                var estado = new SessaoEstadoContext(inicio, fim, DateTime.Now);
+
+                return new SessaoEstadoViewModel
+                {
+                    Nome = sessao.Nome,
+                    Inicio = inicio,
+                    Fim = fim,
+                    Estado = estado.Nome,
+                    ClasseCss = estado.ClasseCss,
+                    Disponivel = estado.Disponivel
+                };
+            })
+            .ToList();
+    }
+
+    private static IReadOnlyList<SessaoEstadoViewModel> ObterSessoesAluguerDigital(int horasAluguer)
+    {
+        var inicioAluguer = DateTime.Now;
+        var fimAluguer = inicioAluguer.AddHours(horasAluguer);
+        var sessoes = new List<SessaoEstadoViewModel>();
+
+        for (var dia = inicioAluguer.Date; dia <= fimAluguer.Date; dia = dia.AddDays(1))
+        {
+            foreach (var sessao in SessaoFestivalCatalog.SessoesPasseDiario)
+            {
+                var inicioSessao = sessao.ObterInicio(dia);
+                var fimSessao = sessao.ObterFim(dia);
+                var inicioCoberto = inicioAluguer > inicioSessao ? inicioAluguer : inicioSessao;
+                var fimCoberto = fimAluguer < fimSessao ? fimAluguer : fimSessao;
+
+                if (inicioCoberto >= fimCoberto)
+                    continue;
+
+                var estado = new SessaoEstadoContext(inicioCoberto, fimCoberto, DateTime.Now);
+
+                sessoes.Add(new SessaoEstadoViewModel
+                {
+                    Nome = sessao.Nome,
+                    Inicio = inicioCoberto,
+                    Fim = fimCoberto,
+                    Estado = estado.Nome,
+                    ClasseCss = estado.ClasseCss,
+                    Disponivel = estado.Disponivel
+                });
+            }
+        }
+
+        return sessoes.Count > 0
+            ? sessoes
+            :
+            [
+                new SessaoEstadoViewModel
+                {
+                    Nome = "Sem sessao coberta",
+                    Inicio = inicioAluguer,
+                    Fim = fimAluguer,
+                    Estado = "Indisponivel",
+                    ClasseCss = "session-state unavailable",
+                    Disponivel = false
+                }
+            ];
     }
 
     private static string ObterDescricaoTipo(TipoAcesso tipo)
