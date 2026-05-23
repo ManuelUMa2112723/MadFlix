@@ -76,11 +76,6 @@ public static class AuthEndpointRouteBuilderExtensions
         IUserPasswordService passwordService,
         HttpContext httpContext)
     {
-        if (!httpContext.User.IsInRole("Admin"))
-        {
-            return Results.Json(new { error = "Apenas administradores podem alterar a password." }, statusCode: 403);
-        }
-
         var idClaim = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (!int.TryParse(idClaim, out var utilizadorId))
         {

@@ -41,36 +41,29 @@
         <section class="profile-card">
             <h2>Alterar password</h2>
 
-            @if (isAdmin)
+            @if (!string.IsNullOrWhiteSpace(passwordMensagem))
             {
-                @if (!string.IsNullOrWhiteSpace(passwordMensagem))
-                {
-                    <div class="alert alert-success">@passwordMensagem</div>
-                }
-
-                @if (!string.IsNullOrWhiteSpace(passwordErro))
-                {
-                    <div class="alert alert-danger">@passwordErro</div>
-                }
-
-                <div class="mb-3">
-                    <label for="currentPassword" class="form-label">Password atual</label>
-                    <input id="currentPassword" class="form-control" type="password" @bind="currentPassword" />
-                </div>
-                <div class="mb-3">
-                    <label for="newPassword" class="form-label">Nova password</label>
-                    <input id="newPassword" class="form-control" type="password" minlength="6" @bind="newPassword" />
-                </div>
-                <div class="mb-3">
-                    <label for="confirmarPassword" class="form-label">Confirmar password</label>
-                    <input id="confirmarPassword" class="form-control" type="password" minlength="6" @bind="confirmarPassword" />
-                </div>
-                <button class="btn btn-primary" @onclick="AlterarPassword" disabled="@passwordChanging">Alterar password</button>
+                <div class="alert alert-success">@passwordMensagem</div>
             }
-            else
+
+            @if (!string.IsNullOrWhiteSpace(passwordErro))
             {
-                <p class="profile-muted">Apenas administradores podem alterar a password.</p>
+                <div class="alert alert-danger">@passwordErro</div>
             }
+
+            <div class="mb-3">
+                <label for="currentPassword" class="form-label">Password atual</label>
+                <input id="currentPassword" class="form-control" type="password" @bind="currentPassword" />
+            </div>
+            <div class="mb-3">
+                <label for="newPassword" class="form-label">Nova password</label>
+                <input id="newPassword" class="form-control" type="password" minlength="6" @bind="newPassword" />
+            </div>
+            <div class="mb-3">
+                <label for="confirmarPassword" class="form-label">Confirmar password</label>
+                <input id="confirmarPassword" class="form-control" type="password" minlength="6" @bind="confirmarPassword" />
+            </div>
+            <button class="btn btn-primary" @onclick="AlterarPassword" disabled="@passwordChanging">Alterar password</button>
         </section>
 
         <section class="profile-card">
@@ -156,7 +149,6 @@
     private string? mensagem;
     private string? erro;
     private int utilizadorId;
-    private bool isAdmin;
     private string currentPassword = string.Empty;
     private string newPassword = string.Empty;
     private string confirmarPassword = string.Empty;
@@ -184,7 +176,6 @@
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var idClaim = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        isAdmin = authState.User.IsInRole("Admin");
 
         if (int.TryParse(idClaim, out var id))
         {
@@ -256,12 +247,6 @@
     {
         passwordMensagem = null;
         passwordErro = null;
-
-        if (!isAdmin)
-        {
-            passwordErro = "Apenas administradores podem alterar a password.";
-            return;
-        }
 
         if (string.IsNullOrWhiteSpace(currentPassword) || string.IsNullOrWhiteSpace(newPassword) || string.IsNullOrWhiteSpace(confirmarPassword))
         {
