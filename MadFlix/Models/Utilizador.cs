@@ -8,6 +8,7 @@ public class Utilizador
     public string Email { get; set; } = string.Empty;
     public string EmailNormalizado { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
+    public string? FotoPerfilUrl { get; set; }
     public DateTime CriadoEmUtc { get; set; } = DateTime.UtcNow;
     public bool IsAdmin { get; set; } = false;
 
@@ -15,5 +16,6 @@ public class Utilizador
     public ICollection<AcessoFestivalCompra> AcessosFestival { get; set; } = new List<AcessoFestivalCompra>();
     public ICollection<FilmeVisualizacao> Visualizacoes { get; set; } = new List<FilmeVisualizacao>();
     public ICollection<ComentarioFilme> ComentariosFilmes { get; set; } = new List<ComentarioFilme>();
+    public ICollection<FestivalFilmeVoto> VotosFestival { get; set; } = new List<FestivalFilmeVoto>();
     public Carrinho? Carrinho { get; set; }
 }

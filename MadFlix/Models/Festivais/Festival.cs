@@ -16,4 +16,5 @@ public class Festival
     public ICollection<Filme> Filmes { get; set; } = new List<Filme>();
     public ICollection<CarrinhoItem> CarrinhoItens { get; set; } = new List<CarrinhoItem>();
     public ICollection<AcessoFestivalCompra> Compras { get; set; } = new List<AcessoFestivalCompra>();
+    public ICollection<FestivalFilmeVoto> VotosFilmes { get; set; } = new List<FestivalFilmeVoto>();
 }

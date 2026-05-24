@@ -221,6 +221,41 @@ namespace MadFlix.Migrations
                     b.ToTable("Festivais");
                 });
 
+            modelBuilder.Entity("MadFlix.Models.FestivalFilmeVoto", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("AtualizadoEmUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CriadoEmUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("FestivalId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("FilmeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("UtilizadorId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FestivalId", "FilmeId");
+
+                    b.HasIndex("FestivalId", "UtilizadorId")
+                        .IsUnique();
+
+                    b.HasIndex("FilmeId");
+
+                    b.HasIndex("UtilizadorId");
+
+                    b.ToTable("FestivalFilmeVotos");
+                });
+
             modelBuilder.Entity("MadFlix.Models.Filme", b =>
                 {
                     b.Property<int>("Id")
@@ -404,6 +439,9 @@ namespace MadFlix.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("FotoPerfilUrl")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("IsAdmin")
                         .HasColumnType("INTEGER");
 
@@ -496,6 +534,33 @@ namespace MadFlix.Migrations
                         .HasForeignKey("UtilizadorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Filme");
+
+                    b.Navigation("Utilizador");
+                });
+
+            modelBuilder.Entity("MadFlix.Models.FestivalFilmeVoto", b =>
+                {
+                    b.HasOne("MadFlix.Models.Festival", "Festival")
+                        .WithMany("VotosFilmes")
+                        .HasForeignKey("FestivalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MadFlix.Models.Filme", "Filme")
+                        .WithMany("VotosFestival")
+                        .HasForeignKey("FilmeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MadFlix.Models.Utilizador", "Utilizador")
+                        .WithMany("VotosFestival")
+                        .HasForeignKey("UtilizadorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Festival");
 
                     b.Navigation("Filme");
 
@@ -626,6 +691,8 @@ namespace MadFlix.Migrations
                     b.Navigation("Compras");
 
                     b.Navigation("Filmes");
+
+                    b.Navigation("VotosFilmes");
                 });
 
             modelBuilder.Entity("MadFlix.Models.Filme", b =>
@@ -639,6 +706,8 @@ namespace MadFlix.Migrations
                     b.Navigation("FilmeAtores");
 
                     b.Navigation("Visualizacoes");
+
+                    b.Navigation("VotosFestival");
                 });
 
             modelBuilder.Entity("MadFlix.Models.ListaPessoal", b =>
@@ -657,6 +726,8 @@ namespace MadFlix.Migrations
                     b.Navigation("Compras");
 
                     b.Navigation("Visualizacoes");
+
+                    b.Navigation("VotosFestival");
                 });
 #pragma warning restore 612, 618
         }

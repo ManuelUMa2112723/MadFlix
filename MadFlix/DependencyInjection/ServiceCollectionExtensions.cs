@@ -6,6 +6,7 @@ using MadFlix.Services.Carrinhos;
 using MadFlix.Services.Festivais;
 using MadFlix.Services.Filmes;
 using MadFlix.Services.Notifications;
+using MadFlix.Services.Profile;
 using MadFlix.Models.Acessos.FactoriesAcessos;
 using MadFlix.Models.Acessos.InterfaceAcessos;
 using MadFlix.Models.Festivais.FactoriesFestivais;
@@ -47,6 +48,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAcessoFestivalCompraRepository, EfAcessoFestivalCompraRepository>();
         services.AddScoped<IFilmeVisualizacaoRepository, EfFilmeVisualizacaoRepository>();
         services.AddScoped<IFestivalRepository, EfFestivalRepository>();
+        services.AddScoped<IFestivalFilmeVotoRepository, EfFestivalFilmeVotoRepository>();
         services.AddScoped<ICarrinhoRepository, EfCarrinhoRepository>();
         services.AddScoped<IComentarioFilmeRepository, EfComentarioFilmeRepository>();
         services.AddScoped<IListaPessoalRepository, ListaPessoalRepository>();
@@ -72,8 +74,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserClaimsPrincipalFactory, UserClaimsPrincipalFactory>();
         services.AddScoped<IUserSessionService, UserSessionService>();
         services.AddScoped<IUserPasswordService, UserPasswordService>();
+        services.AddScoped<IProfilePhotoStorage, LocalProfilePhotoStorage>();
+        services.AddScoped<IUserProfilePhotoService, UserProfilePhotoService>();
+        services.AddScoped<IUserProfilePhotoChangeNotifier, UserProfilePhotoChangeNotifier>();
 
         services.AddScoped<IFilmeCatalogService, FilmeCatalogService>();
+        services.AddScoped<IFilmeRecommendationService, FilmeRecommendationService>();
         services.AddScoped<IFilmePurchaseService, FilmePurchaseService>();
         services.AddScoped<IFilmePlaybackService, FilmePlaybackService>();
         services.AddScoped<IBilheteHistoricoService, BilheteHistoricoService>();
@@ -82,6 +88,11 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IFestivalCatalogService, FestivalCatalogService>();
         services.AddScoped<IFestivalCreationService, FestivalCreationService>();
         services.AddScoped<IFestivalMovieService, FestivalMovieService>();
+        services.AddScoped<IFestivalFavoriteVoteService, FestivalFavoriteVoteService>();
+        services.AddScoped<IFestivalHomeService, FestivalHomeService>();
+        services.AddScoped<IFestivalVisualThemeService, FestivalVisualThemeService>();
+        services.AddScoped<IFestivalHighlightScoreStrategy, FestivalDateHighlightScoreStrategy>();
+        services.AddScoped<IFestivalHighlightScoreStrategy, FestivalEngagementHighlightScoreStrategy>();
         services.AddScoped<ICarrinhoService, CarrinhoService>();
 
         services.AddSingleton<IUserNotificationSubject, UserNotificationDispatcher>();

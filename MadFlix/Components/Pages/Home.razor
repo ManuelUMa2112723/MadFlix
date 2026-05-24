@@ -1,8 +1,8 @@
 @page "/"
 @rendermode InteractiveServer
 @inject ICarrinhoService CarrinhoService
-@inject IFilmeCatalogService FilmeCatalogService
-@inject IFestivalCatalogService FestivalCatalogService
+@inject IFilmeRecommendationService FilmeRecommendationService
+@inject IFestivalHomeService FestivalHomeService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 
@@ -34,17 +34,8 @@
 <FestivalRail Festivals="@festivaisDestaque" />
 
 @code {
-    private readonly string[] titulosRecomendados =
-    [
-        "The Matrix",
-        "Interstellar",
-        "The Godfather",
-        "The Dark Knight",
-        "Pulp Fiction",
-        "Fight Club"
-    ];
-
     private const decimal PrecoBilheteSessao = 6.99m;
+    private const int QuantidadeRecomendados = 6;
     private readonly List<Filme> filmesRecomendados = new();
     private IReadOnlyList<Festival> festivaisDestaque = [];
     private Festival? festivalDestaque;
@@ -63,28 +54,16 @@
 
     private async Task CarregarFestivalDestaqueAsync()
     {
-        var hoje = DateTime.Today;
-        var festivais = await FestivalCatalogService.ListarAsync();
-
-        festivaisDestaque = festivais
-            .OrderBy(f => f.DataFim.Date < hoje)
-            .ThenBy(f => f.DataInicio.Date < hoje ? hoje : f.DataInicio.Date)
-            .ToList();
-
-        festivalDestaque = festivaisDestaque
-            .FirstOrDefault();
+        var highlights = await FestivalHomeService.GetHighlightsAsync();
+        festivaisDestaque = highlights.NowShowingFestivals;
+        festivalDestaque = highlights.FeaturedFestival;
     }
 
     private async Task CarregarRecomendadosAsync()
     {
-        foreach (var titulo in titulosRecomendados)
-        {
-            var resultado = await FilmeCatalogService.BuscarFilmeAsync(titulo);
-
-            if (resultado.Succeeded && resultado.Value is not null)
-                filmesRecomendados.Add(resultado.Value);
-        }
-
+        filmesRecomendados.Clear();
+        filmesRecomendados.AddRange(
+            await FilmeRecommendationService.ListarParaPaginaPrincipalAsync(QuantidadeRecomendados));
         carregandoRecomendados = false;
     }
 

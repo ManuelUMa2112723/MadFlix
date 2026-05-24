@@ -21,6 +21,7 @@ public class AppDbContext : DbContext
     public DbSet<Carrinho> Carrinhos { get; set; }
     public DbSet<CarrinhoItem> CarrinhoItens { get; set; }
     public DbSet<ComentarioFilme> ComentariosFilmes { get; set; }
+    public DbSet<FestivalFilmeVoto> FestivalFilmeVotos { get; set; }
 
     public DbSet<ListaPessoal> ListasPessoais { get; set; }
     public DbSet<ListaPessoalFilme> ListasPessoaisFilmes { get; set; }
@@ -131,6 +132,28 @@ public class AppDbContext : DbContext
             .HasOne(comentario => comentario.Utilizador)
             .WithMany(utilizador => utilizador.ComentariosFilmes)
             .HasForeignKey(comentario => comentario.UtilizadorId);
+
+        modelBuilder.Entity<FestivalFilmeVoto>()
+            .HasIndex(voto => new { voto.FestivalId, voto.UtilizadorId })
+            .IsUnique();
+
+        modelBuilder.Entity<FestivalFilmeVoto>()
+            .HasIndex(voto => new { voto.FestivalId, voto.FilmeId });
+
+        modelBuilder.Entity<FestivalFilmeVoto>()
+            .HasOne(voto => voto.Festival)
+            .WithMany(festival => festival.VotosFilmes)
+            .HasForeignKey(voto => voto.FestivalId);
+
+        modelBuilder.Entity<FestivalFilmeVoto>()
+            .HasOne(voto => voto.Filme)
+            .WithMany(filme => filme.VotosFestival)
+            .HasForeignKey(voto => voto.FilmeId);
+
+        modelBuilder.Entity<FestivalFilmeVoto>()
+            .HasOne(voto => voto.Utilizador)
+            .WithMany(utilizador => utilizador.VotosFestival)
+            .HasForeignKey(voto => voto.UtilizadorId);
         
         modelBuilder.Entity<ListaPessoalFilme>()
             .HasKey(lf => new { lf.ListaPessoalId, lf.FilmeId });

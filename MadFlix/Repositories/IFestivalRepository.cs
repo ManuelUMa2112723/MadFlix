@@ -6,5 +6,6 @@ public interface IFestivalRepository
 {
     Task<Festival?> GetByIdAsync(int festivalId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Festival>> ListarAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Festival>> ListarComMetricasAsync(CancellationToken cancellationToken = default);
     Task AddAsync(Festival festival, CancellationToken cancellationToken = default);
 }

@@ -16,29 +16,10 @@
     }
     else
     {
-        <FestivalStrip Title="Festivais emocionantes" Festivals="@FeaturedFestivals" StartIndex="0" />
-        <FestivalStrip Title="Novidades na MadFlix" Festivals="@UpcomingFestivals" StartIndex="5" />
-        <FestivalStrip Title="Sessoes especiais aclamadas pela critica" Festivals="@Festivals" StartIndex="10" />
+        <FestivalStrip Title="Em cartaz agora" Festivals="@Festivals" />
     }
 </section>
 
 @code {
     [Parameter, EditorRequired] public IReadOnlyList<Festival> Festivals { get; set; } = [];
-
-    private IReadOnlyList<Festival> FeaturedFestivals => Festivals.Take(8).ToList();
-
-    private IReadOnlyList<Festival> UpcomingFestivals
-    {
-        get
-        {
-            var hoje = DateTime.Today;
-            var proximos = Festivals
-                .Where(f => f.DataFim.Date >= hoje)
-                .OrderBy(f => f.DataInicio)
-                .Take(8)
-                .ToList();
-
-            return proximos.Count > 0 ? proximos : FeaturedFestivals;
-        }
-    }
 }

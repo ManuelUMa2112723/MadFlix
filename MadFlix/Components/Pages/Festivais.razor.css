@@ -38,6 +38,67 @@
     margin-top: 1rem;
 }
 
+.festival-help {
+    align-items: start;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: minmax(180px, 0.7fr) minmax(0, 2fr);
+    margin: 1.25rem 0;
+    padding: 1rem;
+}
+
+.festival-help h3 {
+    color: #ffffff;
+    font-size: clamp(1.25rem, 2vw, 1.7rem);
+    line-height: 1.12;
+    margin: 0;
+}
+
+.festival-help-grid {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.festival-help article {
+    min-width: 0;
+}
+
+.festival-help article span {
+    align-items: center;
+    background: #f4c95d;
+    border-radius: 999px;
+    color: #080b12;
+    display: inline-flex;
+    font-family: Inter, Arial, sans-serif;
+    font-size: 0.78rem;
+    font-weight: 900;
+    height: 1.6rem;
+    justify-content: center;
+    margin-bottom: 0.55rem;
+    width: 1.6rem;
+}
+
+.festival-help article strong {
+    color: #ffffff;
+    display: block;
+    font-family: Inter, Arial, sans-serif;
+    font-weight: 900;
+    margin-bottom: 0.3rem;
+}
+
+.festival-help article p {
+    color: #d8dce5;
+    font-family: Inter, Arial, sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    line-height: 1.45;
+    margin: 0;
+}
+
 .festival-muted {
     color: #d8dce5;
     font-family: Inter, Arial, sans-serif;
@@ -303,6 +364,53 @@
     font-weight: 700;
 }
 
+.festival-vote-row {
+    align-items: center;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: space-between;
+    margin-top: 0.45rem;
+}
+
+.festival-vote-row span {
+    color: #f4c95d;
+    font-size: 0.78rem;
+    font-weight: 900;
+}
+
+.festival-vote-button,
+.festival-vote-login {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid rgba(255, 255, 255, 0.94);
+    border-radius: 6px;
+    color: #080b12 !important;
+    display: inline-flex;
+    font-family: Inter, Arial, sans-serif;
+    font-size: 0.78rem;
+    font-weight: 900;
+    justify-content: center;
+    min-height: 2rem;
+    padding: 0.32rem 0.55rem;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.festival-vote-button:hover,
+.festival-vote-button:focus,
+.festival-vote-login:hover,
+.festival-vote-login:focus {
+    background: #f4c95d;
+    border-color: #f4c95d;
+    color: #080b12 !important;
+}
+
+.festival-vote-button-active {
+    background: #16a34a;
+    border-color: #16a34a;
+    color: #ffffff !important;
+}
+
 .festival-user-button {
     color: #9f0f1a;
     border: 1px solid #ffffff;
@@ -316,6 +424,14 @@
 }
 
 @media (max-width: 980px) {
+    .festival-help {
+        grid-template-columns: 1fr;
+    }
+
+    .festival-help-grid {
+        grid-template-columns: 1fr;
+    }
+
     .festival-purchase-grid {
         grid-template-columns: 1fr;
     }

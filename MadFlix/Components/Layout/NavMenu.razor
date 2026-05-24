@@ -1,6 +1,12 @@
 ﻿@rendermode InteractiveServer
+@implements IDisposable
+@using System.Security.Claims
+@using MadFlix.Services.Profile
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 @inject IFilmeCatalogService FilmeCatalogService
+@inject IUserProfilePhotoService ProfilePhotoService
+@inject IUserProfilePhotoChangeNotifier ProfilePhotoChangeNotifier
 
 <div class="nav-shell">
     <a class="navbar-brand" href="">MadFlix</a>
@@ -68,39 +74,71 @@
 
             <AuthorizeView>
                 <Authorized Context="authState">
-                    <details class="profile-menu">
-                        <summary class="profile-avatar-button"
-                                 title="@($"Perfil de {authState.User.Identity?.Name}")"
-                                 aria-label="@($"Abrir menu de perfil de {authState.User.Identity?.Name}")">
-                            <span class="profile-avatar" aria-hidden="true">
-                                @GetUserInitials(authState.User.Identity?.Name)
-                            </span>
-                        </summary>
+                    <div class="profile-menu">
+                        @if (profileMenuOpen)
+                        {
+                            <button class="profile-menu-backdrop"
+                                    type="button"
+                                    aria-label="Fechar menu de perfil"
+                                    @onclick="CloseProfileMenu"></button>
+                        }
 
-                        <div class="profile-dropdown">
-                            <div class="profile-dropdown-header">
-                                <span class="profile-avatar profile-avatar-small" aria-hidden="true">
+                        <button class="profile-avatar-button"
+                                type="button"
+                                title="@($"Perfil de {authState.User.Identity?.Name}")"
+                                aria-label="@($"Abrir menu de perfil de {authState.User.Identity?.Name}")"
+                                aria-expanded="@profileMenuOpen"
+                                @onclick="ToggleProfileMenu">
+                            @if (!string.IsNullOrWhiteSpace(currentProfilePhotoUrl))
+                            {
+                                <img class="profile-avatar profile-avatar-image"
+                                     src="@currentProfilePhotoUrl"
+                                     alt="" />
+                            }
+                            else
+                            {
+                                <span class="profile-avatar" aria-hidden="true">
                                     @GetUserInitials(authState.User.Identity?.Name)
                                 </span>
-                                <div>
-                                    <strong>@authState.User.Identity?.Name</strong>
-                                    <span>Conta MadFlix</span>
+                            }
+                        </button>
+
+                        @if (profileMenuOpen)
+                        {
+                            <div class="profile-dropdown">
+                                <div class="profile-dropdown-header">
+                                    @if (!string.IsNullOrWhiteSpace(currentProfilePhotoUrl))
+                                    {
+                                        <img class="profile-avatar profile-avatar-small profile-avatar-image"
+                                             src="@currentProfilePhotoUrl"
+                                             alt="" />
+                                    }
+                                    else
+                                    {
+                                        <span class="profile-avatar profile-avatar-small" aria-hidden="true">
+                                            @GetUserInitials(authState.User.Identity?.Name)
+                                        </span>
+                                    }
+                                    <div>
+                                        <strong>@authState.User.Identity?.Name</strong>
+                                        <span>Conta MadFlix</span>
+                                    </div>
                                 </div>
+
+                                <a class="profile-dropdown-item" href="perfil" @onclick="CloseProfileMenu">
+                                    Minha conta
+                                </a>
+
+                                <form class="logout-form profile-dropdown-form" method="post" action="/auth/logout">
+                                    <AntiforgeryToken />
+                                    <input type="hidden" name="returnUrl" value="@NavigationManager.ToLocalPath()" />
+                                    <button class="profile-dropdown-item profile-dropdown-button" type="submit">
+                                        Terminar sessao
+                                    </button>
+                                </form>
                             </div>
-
-                            <a class="profile-dropdown-item" href="perfil">
-                                Minha conta
-                            </a>
-
-                            <form class="logout-form profile-dropdown-form" method="post" action="/auth/logout">
-                                <AntiforgeryToken />
-                                <input type="hidden" name="returnUrl" value="@NavigationManager.ToLocalPath()" />
-                                <button class="profile-dropdown-item profile-dropdown-button" type="submit">
-                                    Terminar sessao
-                                </button>
-                            </form>
-                        </div>
-                    </details>
+                        }
+                    </div>
                 </Authorized>
                 <NotAuthorized>
                     <NavLink class="nav-link" href="@GetLoginUrl()">
@@ -119,6 +157,9 @@
 @code {
     private string headerSearchTerm = string.Empty;
     private string headerSearchType = "filme";
+    private int? currentUserId;
+    private string? currentProfilePhotoUrl;
+    private bool profileMenuOpen;
 
     private void OnHeaderSearchTermChanged(ChangeEventArgs e)
     {
@@ -151,6 +192,43 @@
         NavigationManager.NavigateTo($"/filmes/{resultado.Value.Id}?returnUrl={returnUrl}");
     }
 
+    private void ToggleProfileMenu()
+    {
+        profileMenuOpen = !profileMenuOpen;
+    }
+
+    private void CloseProfileMenu()
+    {
+        profileMenuOpen = false;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        ProfilePhotoChangeNotifier.PhotoChanged += OnProfilePhotoChanged;
+        await LoadCurrentProfilePhotoAsync();
+    }
+
+    private async Task LoadCurrentProfilePhotoAsync()
+    {
+        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var idClaim = authenticationState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(idClaim, out var utilizadorId))
+            return;
+
+        currentUserId = utilizadorId;
+        currentProfilePhotoUrl = await ProfilePhotoService.GetPhotoUrlAsync(utilizadorId);
+    }
+
+    private void OnProfilePhotoChanged(int utilizadorId, string? photoUrl)
+    {
+        if (currentUserId != utilizadorId)
+            return;
+
+        currentProfilePhotoUrl = photoUrl;
+        _ = InvokeAsync(StateHasChanged);
+    }
+
     private string GetLoginUrl()
     {
         return $"/login?returnUrl={Uri.EscapeDataString(NavigationManager.ToLocalPath())}";
@@ -176,5 +254,10 @@
             return parts[0][0].ToString().ToUpperInvariant();
 
         return $"{parts[0][0]}{parts[^1][0]}".ToUpperInvariant();
+    }
+
+    public void Dispose()
+    {
+        ProfilePhotoChangeNotifier.PhotoChanged -= OnProfilePhotoChanged;
     }
 }

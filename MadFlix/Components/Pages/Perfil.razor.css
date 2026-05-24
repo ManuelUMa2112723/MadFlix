@@ -31,6 +31,11 @@
     width: clamp(4.5rem, 9vw, 6.5rem);
 }
 
+.profile-avatar-image {
+    background: #111827;
+    object-fit: cover;
+}
+
 .profile-kicker {
     color: #f4c95d;
     font-size: 0.76rem;
@@ -97,6 +102,40 @@
     color: #111827;
     display: block;
     overflow-wrap: anywhere;
+}
+
+.profile-photo-editor {
+    align-items: center;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: auto minmax(0, 1fr);
+}
+
+.profile-photo-preview {
+    align-items: center;
+    background: #111827;
+    border: 3px solid #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.22);
+    color: #ffffff;
+    display: inline-flex;
+    font-size: 1.5rem;
+    font-weight: 900;
+    height: 6rem;
+    justify-content: center;
+    object-fit: cover;
+    width: 6rem;
+}
+
+.profile-photo-fallback {
+    background:
+        linear-gradient(135deg, rgba(244, 201, 93, 0.95), rgba(229, 9, 20, 0.95)),
+        #e50914;
+    color: #111827;
+}
+
+.profile-photo-controls {
+    min-width: 0;
 }
 
 .profile-muted {
@@ -173,5 +212,9 @@
     .profile-info-grid {
         grid-template-columns: 1fr;
     }
-}
 
+    .profile-photo-editor {
+        align-items: start;
+        grid-template-columns: 1fr;
+    }
+}

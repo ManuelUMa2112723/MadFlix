@@ -228,14 +228,6 @@
     position: relative;
 }
 
-.profile-menu summary {
-    list-style: none;
-}
-
-.profile-menu summary::-webkit-details-marker {
-    display: none;
-}
-
 .profile-avatar-button {
     align-items: center;
     background: transparent;
@@ -249,6 +241,18 @@
     padding: 0;
     text-decoration: none;
     width: 2.65rem;
+    position: relative;
+    z-index: 42;
+}
+
+.profile-menu-backdrop {
+    background: transparent;
+    border: 0;
+    cursor: default;
+    inset: 0;
+    padding: 0;
+    position: fixed;
+    z-index: 39;
 }
 
 .profile-avatar {
@@ -277,8 +281,13 @@
     width: 2.05rem;
 }
 
+.profile-avatar-image {
+    display: block;
+    object-fit: cover;
+}
+
 .profile-avatar-button:hover .profile-avatar,
-.profile-menu[open] .profile-avatar-button .profile-avatar,
+.profile-avatar-button[aria-expanded="true"] .profile-avatar,
 .profile-avatar-button:focus-visible .profile-avatar {
     border-color: #f4c95d;
     transform: translateY(-1px);
@@ -295,7 +304,7 @@
     position: absolute;
     right: 0;
     top: calc(100% + 0.65rem);
-    z-index: 40;
+    z-index: 43;
 }
 
 .profile-dropdown::before {

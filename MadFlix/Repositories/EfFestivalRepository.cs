@@ -26,6 +26,15 @@ public sealed class EfFestivalRepository : IFestivalRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Festival>> ListarComMetricasAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.Festivais
+            .Include(festival => festival.Filmes)
+            .Include(festival => festival.Compras)
+            .Include(festival => festival.VotosFilmes)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task AddAsync(Festival festival, CancellationToken cancellationToken = default)
     {
         _context.Festivais.Add(festival);

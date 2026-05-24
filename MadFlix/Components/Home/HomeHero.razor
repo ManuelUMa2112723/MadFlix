@@ -1,4 +1,15 @@
+@inject IFestivalVisualThemeService FestivalVisualThemeService
+
 <section class="hero-stage" aria-labelledby="home-hero-title">
+    @if (FeaturedFestival is not null)
+    {
+        <div class="hero-background" style="--hero-bg: url('@FestivalVisualThemeService.GetImageUrl(FeaturedFestival)')"></div>
+    }
+    else
+    {
+        <div class="hero-background hero-background-default"></div>
+    }
+
     <div class="hero-content">
         <div class="hero-copy">
             <p class="hero-kicker">Festival em destaque</p>

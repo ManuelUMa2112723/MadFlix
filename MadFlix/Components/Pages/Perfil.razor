@@ -2,11 +2,15 @@
 @rendermode InteractiveServer
 @using System.Collections.Generic
 @using System.Security.Claims
+@using MadFlix.Contracts.Profile
 @using MadFlix.Models
 @using MadFlix.Services
+@using MadFlix.Services.Profile
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IListaPessoalService ListaPessoalService
 @inject IUserPasswordService PasswordService
+@inject IUserProfilePhotoChangeNotifier ProfilePhotoChangeNotifier
+@inject IUserProfilePhotoService ProfilePhotoService
 @inject NavigationManager NavigationManager
 
 <PageTitle>Perfil</PageTitle>
@@ -14,9 +18,18 @@
 <AuthorizeView Roles="User,Admin">
     <Authorized Context="authState">
         <section class="profile-hero" aria-labelledby="profile-title">
-            <div class="profile-avatar-large" aria-hidden="true">
-                @GetUserInitials(authState.User.Identity?.Name)
-            </div>
+            @if (!string.IsNullOrWhiteSpace(fotoPerfilUrl))
+            {
+                <img class="profile-avatar-large profile-avatar-image"
+                     src="@fotoPerfilUrl"
+                     alt="Foto de perfil de @authState.User.Identity?.Name" />
+            }
+            else
+            {
+                <div class="profile-avatar-large" aria-hidden="true">
+                    @GetUserInitials(authState.User.Identity?.Name)
+                </div>
+            }
             <div>
                 <p class="profile-kicker">Minha conta</p>
                 <h1 id="profile-title">Perfil</h1>
@@ -34,6 +47,42 @@
                 <div>
                     <span>Email</span>
                     <strong>@authState.User.FindFirst(ClaimTypes.Email)?.Value</strong>
+                </div>
+            </div>
+        </section>
+
+        <section class="profile-card">
+            <h2>Foto de perfil</h2>
+
+            @if (!string.IsNullOrWhiteSpace(fotoMensagem))
+            {
+                <div class="alert alert-success">@fotoMensagem</div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(fotoErro))
+            {
+                <div class="alert alert-danger">@fotoErro</div>
+            }
+
+            <div class="profile-photo-editor">
+                @if (!string.IsNullOrWhiteSpace(fotoPerfilUrl))
+                {
+                    <img class="profile-photo-preview" src="@fotoPerfilUrl" alt="Foto de perfil atual" />
+                }
+                else
+                {
+                    <div class="profile-photo-preview profile-photo-fallback" aria-hidden="true">
+                        @GetUserInitials(authState.User.Identity?.Name)
+                    </div>
+                }
+
+                <div class="profile-photo-controls">
+                    <label class="form-label" for="profilePhoto">Escolher imagem</label>
+                    <InputFile id="profilePhoto"
+                               class="form-control"
+                               accept="image/jpeg,image/png,image/webp"
+                               OnChange="AlterarFotoPerfil" />
+                    <p class="profile-muted">Formatos permitidos: JPG, PNG ou WebP. A imagem e comprimida automaticamente.</p>
                 </div>
             </div>
         </section>
@@ -155,6 +204,12 @@
     private string? passwordMensagem;
     private string? passwordErro;
     private bool passwordChanging;
+    private string? fotoPerfilUrl;
+    private string? fotoMensagem;
+    private string? fotoErro;
+    private const int FotoPerfilMaxWidth = 512;
+    private const int FotoPerfilMaxHeight = 512;
+    private const string FotoPerfilContentType = "image/jpeg";
 
     private static string GetUserInitials(string? userName)
     {
@@ -180,6 +235,7 @@
         if (int.TryParse(idClaim, out var id))
         {
             utilizadorId = id;
+            fotoPerfilUrl = await ProfilePhotoService.GetPhotoUrlAsync(utilizadorId);
             await CarregarListas();
         }
 
@@ -294,6 +350,57 @@
         finally
         {
             passwordChanging = false;
+        }
+    }
+
+    private async Task AlterarFotoPerfil(InputFileChangeEventArgs args)
+    {
+        fotoMensagem = null;
+        fotoErro = null;
+
+        var file = args.File;
+
+        if (file is null)
+        {
+            fotoErro = "Escolha uma imagem para atualizar a foto de perfil.";
+            return;
+        }
+
+        try
+        {
+            var compressedFile = await file.RequestImageFileAsync(
+                FotoPerfilContentType,
+                FotoPerfilMaxWidth,
+                FotoPerfilMaxHeight);
+
+            if (compressedFile.Size > ProfilePhotoService.MaxFileSizeBytes)
+            {
+                fotoErro = "A imagem comprimida deve ter no maximo 2 MB.";
+                return;
+            }
+
+            await using var stream = compressedFile.OpenReadStream(ProfilePhotoService.MaxFileSizeBytes);
+            var upload = new ProfilePhotoUpload(
+                stream,
+                compressedFile.Name,
+                compressedFile.ContentType,
+                compressedFile.Size);
+
+            var resultado = await ProfilePhotoService.ChangePhotoAsync(utilizadorId, upload);
+
+            if (!resultado.Succeeded || string.IsNullOrWhiteSpace(resultado.Value))
+            {
+                fotoErro = resultado.ErrorMessage ?? "Nao foi possivel atualizar a foto de perfil.";
+                return;
+            }
+
+            fotoPerfilUrl = resultado.Value;
+            ProfilePhotoChangeNotifier.NotifyChanged(utilizadorId, fotoPerfilUrl);
+            fotoMensagem = "Foto de perfil atualizada com sucesso.";
+        }
+        catch
+        {
+            fotoErro = "Erro ao atualizar a foto de perfil.";
         }
     }
 }

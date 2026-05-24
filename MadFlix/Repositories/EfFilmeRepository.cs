@@ -47,6 +47,24 @@ public sealed class EfFilmeRepository : IFilmeRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Filme>> ListarRecomendadosAsync(
+        int quantidade,
+        CancellationToken cancellationToken = default)
+    {
+        var hoje = DateTime.Today;
+
+        return await _context.Filmes
+            .Include(filme => filme.Festival)
+            .Where(filme => filme.FestivalId != null || filme.ImdbRating != null)
+            .OrderByDescending(filme => filme.Festival != null && filme.Festival.DataFim.Date >= hoje)
+            .ThenByDescending(filme => filme.VotosFestival.Count)
+            .ThenByDescending(filme => filme.ImdbRating ?? 0)
+            .ThenByDescending(filme => filme.Ano)
+            .ThenBy(filme => filme.Titulo)
+            .Take(quantidade)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task AddAsync(Filme filme, CancellationToken cancellationToken = default)
     {
         _context.Filmes.Add(filme);

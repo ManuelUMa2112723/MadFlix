@@ -27,4 +27,5 @@ public class Filme
     public ICollection<FilmeVisualizacao> Visualizacoes { get; set; } = new List<FilmeVisualizacao>();
     public ICollection<CarrinhoItem> CarrinhoItens { get; set; } = new List<CarrinhoItem>();
     public ICollection<ComentarioFilme> Comentarios { get; set; } = new List<ComentarioFilme>();
+    public ICollection<FestivalFilmeVoto> VotosFestival { get; set; } = new List<FestivalFilmeVoto>();
 }

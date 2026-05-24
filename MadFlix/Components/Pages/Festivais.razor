@@ -5,6 +5,7 @@
 @inject ICarrinhoService CarrinhoService
 @inject IFestivalCatalogService FestivalCatalogService
 @inject IFestivalCreationService FestivalCreationService
+@inject IFestivalFavoriteVoteService FestivalFavoriteVoteService
 @inject IFestivalMovieService FestivalMovieService
 @inject NavigationManager NavigationManager
 
@@ -19,9 +20,43 @@
         <span>@festivais.Count programa(s)</span>
     </div>
 
+    <section class="festival-help" aria-labelledby="festival-help-title">
+        <div>
+            <p class="festival-kicker">Ajuda rapida</p>
+            <h3 id="festival-help-title">Como usar os festivais</h3>
+        </div>
+        <div class="festival-help-grid">
+            <article>
+                <span>1</span>
+                <strong>Escolha o acesso</strong>
+                <p>Use passe diario para um dia, passe completo para todo o evento ou aluguer digital por horas.</p>
+            </article>
+            <article>
+                <span>2</span>
+                <strong>Consulte o catalogo</strong>
+                <p>Abra o catalogo de cada festival para ver os filmes disponiveis e entrar nos detalhes.</p>
+            </article>
+            <article>
+                <span>3</span>
+                <strong>Vote no favorito</strong>
+                <p>Depois de iniciar sessao, vote no filme preferido. Pode alterar o voto enquanto o festival existir.</p>
+            </article>
+        </div>
+    </section>
+
     @if (!string.IsNullOrWhiteSpace(mensagemCarrinho))
     {
         <div class="alert alert-success mt-3">@mensagemCarrinho</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(mensagem))
+    {
+        <div class="alert alert-success mt-3">@mensagem</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(erro))
+    {
+        <div class="alert alert-danger mt-3">@erro</div>
     }
 
     <div class="festival-content">
@@ -144,12 +179,33 @@
                                         <div class="festival-movie-grid">
                                             @foreach (var filmeFestival in filmesFestival)
                                             {
-                                                <button class="festival-movie-card" type="button"
-                                                        @onclick="() => AbrirDetalhesFilme(filmeFestival.Id)">
+                                                <article class="festival-movie-card" role="button" tabindex="0"
+                                                         @onclick="() => AbrirDetalhesFilme(filmeFestival.Id)"
+                                                         @onkeydown="e => AbrirDetalhesFilmeComTecla(e, filmeFestival.Id)">
                                                     <strong>@filmeFestival.Titulo</strong>
                                                     <span>@filmeFestival.Genero</span>
                                                     <small>@filmeFestival.Ano</small>
-                                                </button>
+                                                    <div class="festival-vote-row">
+                                                        <span>@ObterTotalVotos(festival.Id, filmeFestival.Id) voto(s)</span>
+                                                        <AuthorizeView>
+                                                            <Authorized>
+                                                                <button class="@ObterClasseBotaoVoto(festival.Id, filmeFestival.Id)"
+                                                                        type="button"
+                                                                        @onclick:stopPropagation="true"
+                                                                        @onclick="() => VotarFilmeFavorito(festival.Id, filmeFestival.Id)">
+                                                                    @ObterTextoBotaoVoto(festival.Id, filmeFestival.Id)
+                                                                </button>
+                                                            </Authorized>
+                                                            <NotAuthorized>
+                                                                <a class="festival-vote-login"
+                                                                   href="@GetLoginUrl()"
+                                                                   @onclick:stopPropagation="true">
+                                                                    Iniciar sessao
+                                                                </a>
+                                                            </NotAuthorized>
+                                                        </AuthorizeView>
+                                                    </div>
+                                                </article>
                                             }
                                         </div>
                                     }
@@ -281,6 +337,8 @@
     private readonly FilmeFestivalForm filmeFestivalForm = new();
     private readonly Dictionary<int, CompraFestivalForm> comprasPorFestival = new();
     private readonly Dictionary<int, List<Filme>> filmesPorFestival = new();
+    private readonly Dictionary<int, Dictionary<int, int>> votosPorFestival = new();
+    private readonly Dictionary<int, int?> votoUtilizadorPorFestival = new();
     private readonly HashSet<int> catalogosAbertos = new();
     private readonly HashSet<int> catalogosACarregar = new();
     private List<Festival> festivais = new();
@@ -357,7 +415,19 @@
     {
         catalogosACarregar.Add(festivalId);
         filmesPorFestival[festivalId] = (await FestivalMovieService.ListarFilmesAsync(festivalId)).ToList();
+        await CarregarVotosFestival(festivalId);
         catalogosACarregar.Remove(festivalId);
+    }
+
+    private async Task CarregarVotosFestival(int festivalId)
+    {
+        var resumo = await FestivalFavoriteVoteService.ListarResumoAsync(festivalId);
+        votosPorFestival[festivalId] = resumo.ToDictionary(voto => voto.FilmeId, voto => voto.TotalVotos);
+
+        var utilizadorId = await ObterUtilizadorIdAutenticado();
+        votoUtilizadorPorFestival[festivalId] = utilizadorId.HasValue
+            ? await FestivalFavoriteVoteService.ObterFilmeVotadoAsync(festivalId, utilizadorId.Value)
+            : null;
     }
 
     private string ObterTextoBotaoCatalogo(int festivalId)
@@ -507,10 +577,70 @@
             await CarregarCatalogoFestival(filmeFestivalForm.FestivalId);
     }
 
+    private async Task VotarFilmeFavorito(int festivalId, int filmeId)
+    {
+        var utilizadorId = await ObterUtilizadorIdAutenticado();
+
+        if (utilizadorId is null)
+        {
+            erro = "Tem de iniciar sessao para votar no filme favorito.";
+            mensagem = null;
+            return;
+        }
+
+        var resultado = await FestivalFavoriteVoteService.VotarAsync(
+            festivalId,
+            filmeId,
+            utilizadorId.Value);
+
+        if (!resultado.Succeeded)
+        {
+            erro = resultado.ErrorMessage;
+            mensagem = null;
+            return;
+        }
+
+        mensagem = resultado.Value;
+        erro = null;
+        await CarregarVotosFestival(festivalId);
+    }
+
+    private int ObterTotalVotos(int festivalId, int filmeId)
+    {
+        return votosPorFestival.TryGetValue(festivalId, out var votosFestival) &&
+            votosFestival.TryGetValue(filmeId, out var total)
+                ? total
+                : 0;
+    }
+
+    private string ObterTextoBotaoVoto(int festivalId, int filmeId)
+    {
+        return votoUtilizadorPorFestival.TryGetValue(festivalId, out var filmeVotadoId) &&
+            filmeVotadoId == filmeId
+                ? "Votado"
+                : "Votar";
+    }
+
+    private string ObterClasseBotaoVoto(int festivalId, int filmeId)
+    {
+        var votado = votoUtilizadorPorFestival.TryGetValue(festivalId, out var filmeVotadoId) &&
+            filmeVotadoId == filmeId;
+
+        return votado
+            ? "festival-vote-button festival-vote-button-active"
+            : "festival-vote-button";
+    }
+
     private void AbrirDetalhesFilme(int filmeId)
     {
         var returnUrl = Uri.EscapeDataString(NavigationManager.ToLocalPath());
         NavigationManager.NavigateTo($"/filmes/{filmeId}?returnUrl={returnUrl}");
+    }
+
+    private void AbrirDetalhesFilmeComTecla(KeyboardEventArgs args, int filmeId)
+    {
+        if (args.Key is "Enter" or " ")
+            AbrirDetalhesFilme(filmeId);
     }
 
     private static IReadOnlyList<SessaoEstadoViewModel> ObterSessoesFestival(CompraFestivalForm compra)
