@@ -1,39 +1,42 @@
-Caminho A — Projeto Blazor Web App  
-  
-� LojaApp/  
-│  
-├── � Models/  
-│ ├── Produto.cs ← classes C# simples  
-│ └── Categoria.cs  
-│  
-├── � Data/  
-│ └── AppDbContext.cs ← EF Core — ligação à BD  
-│  
-├── � Repositories/  
-│ └── ProdutoRepository.cs ← padrão Repository — todas as queries  
-│  
-├── � Services/  
-│ └── ProdutoService.cs ← lógica de negócio — Strategy, Factory...  
-├── � Pages/  
-│ └── Produtos.razor ← UI — chama o Service diretamente  
-│  
-└── Program.cs ← regista tudo no Dependency Injection  
+# MadFlix
+
+## Elementos do grupo
+
+- Manuel Fernandes - 2112723
+- Ricardo Nunes - 2118823
+- Juan Agustin Gomes Olim - 2030418
+- Luis Andrade - 2131023
+
+## Como correr o projeto
+
+Restaurar dependencias:
 
 
+dotnet restore
 
 
-
-<img width="1180" height="730" alt="DiagramaDominio" src="https://github.com/user-attachments/assets/c49cadba-2628-4269-9bba-0b9a953ca110" />  
-  
-  
-<img width="2918" height="1349" alt="ModeloRelacional(BD)" src="https://github.com/user-attachments/assets/640e55f6-4472-416e-ba2a-e030743567fd" />  
+Aplicar migrations / atualizar a base de dados:
 
 
+dotnet ef database update --project MadFlix/MadFlix.csproj
 
-Algumas instruções para atualizar BD; fazer no terminal. A primeira faz um plano de trocas para preparar a migração.  A segunda faz a migração e atualiza fisicamente a base de dados.
 
-1. dotnet ef migrations add AddCamposOmdb  
-  
-2. dotnet ef database update  
+Correr o projeto:
 
-Para ver a BD no VS Code, instalar extensão: SQLite Viewer (de Florian Klampfer), logo abrir o ficheiro madflix.db
+
+dotnet run --project MadFlix/MadFlix.csproj
+
+
+## Base de dados e credenciais
+
+O projeto usa SQLite:
+
+```json
+"DefaultConnection": "Data Source=madflix.db"
+```
+
+A aplicacao permite criar conta na pagina de registo.
+
+Para testar funcionalidades de administrador, a conta deve ter `IsAdmin = 1` na tabela `Utilizadores`.
+
+
