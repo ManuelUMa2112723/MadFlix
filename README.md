@@ -39,4 +39,6 @@ A aplicacao permite criar conta na pagina de registo.
 
 Para testar funcionalidades de administrador, a conta deve ter `IsAdmin = 1` na tabela `Utilizadores`.
 
+Para testar o acesso Admin usar as credenciais: username: Juan ; password: 123456
+
 
