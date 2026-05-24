@@ -259,43 +259,37 @@ public sealed class CarrinhoService : ICarrinhoService
             {
                 var inicioAluguer = DateTime.Now;
                 var fimAluguer = inicioAluguer.AddHours(item.HorasAluguer ?? 48);
-                var festival = await _festivalRepository.GetByIdAsync(item.FestivalId!.Value, cancellationToken);
+                var acessosCriadosItem = 0;
 
-                if (festival is not null)
+                for (var dia = inicioAluguer.Date; dia <= fimAluguer.Date; dia = dia.AddDays(1))
                 {
-                    var primeiroDia = inicioAluguer.Date < festival.DataInicio.Date
-                        ? festival.DataInicio.Date
-                        : inicioAluguer.Date;
-                    var ultimoDia = fimAluguer.Date > festival.DataFim.Date
-                        ? festival.DataFim.Date
-                        : fimAluguer.Date;
-
-                    for (var dia = primeiroDia; dia <= ultimoDia; dia = dia.AddDays(1))
+                    foreach (var sessao in SessaoFestivalCatalog.SessoesPasseDiario)
                     {
-                        foreach (var sessao in SessaoFestivalCatalog.SessoesPasseDiario)
+                        var inicioSessao = sessao.ObterInicio(dia);
+                        var fimSessao = sessao.ObterFim(dia);
+                        var inicioCoberto = inicioAluguer > inicioSessao ? inicioAluguer : inicioSessao;
+                        var fimCoberto = fimAluguer < fimSessao ? fimAluguer : fimSessao;
+
+                        if (inicioCoberto >= fimCoberto)
+                            continue;
+
+                        await _acessoFestivalCompraRepository.AddAsync(new AcessoFestivalCompra
                         {
-                            var inicioSessao = sessao.ObterInicio(dia);
-                            var fimSessao = sessao.ObterFim(dia);
-                            var inicioCoberto = inicioAluguer > inicioSessao ? inicioAluguer : inicioSessao;
-                            var fimCoberto = fimAluguer < fimSessao ? fimAluguer : fimSessao;
+                            UtilizadorId = utilizadorId,
+                            FestivalId = item.FestivalId!.Value,
+                            TipoAcesso = TipoAcesso.AluguerDigital,
+                            InicioAcessoUtc = inicioCoberto.ToUniversalTime(),
+                            FimAcessoUtc = fimCoberto.ToUniversalTime(),
+                            CompradoEmUtc = DateTime.UtcNow
+                        }, cancellationToken);
 
-                            if (inicioCoberto >= fimCoberto)
-                                continue;
-
-                            await _acessoFestivalCompraRepository.AddAsync(new AcessoFestivalCompra
-                            {
-                                UtilizadorId = utilizadorId,
-                                FestivalId = item.FestivalId.Value,
-                                TipoAcesso = TipoAcesso.AluguerDigital,
-                                InicioAcessoUtc = inicioCoberto.ToUniversalTime(),
-                                FimAcessoUtc = fimCoberto.ToUniversalTime(),
-                                CompradoEmUtc = DateTime.UtcNow
-                            }, cancellationToken);
-
-                            acessosCriados++;
-                        }
+                        acessosCriados++;
+                        acessosCriadosItem++;
                     }
                 }
+
+                if (acessosCriadosItem == 0)
+                    return ServiceResult<string>.Failure("O aluguer digital escolhido nao cobre nenhuma sessao disponivel.");
             }
 
             await _carrinhoRepository.RemoveItemAsync(item, cancellationToken);
